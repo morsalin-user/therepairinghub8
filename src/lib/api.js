@@ -264,8 +264,15 @@ export const userAPI = {
       return handleApiError(error)
     }
   },
+  getUser: async (userId) => {
+    const response = await api.get(`/users/${userId}`)
+    return response.data
+  },
+  deleteAccount: async (userId) => {
+    const response = await axios.delete(`/api/users/${userId}`)
+    return response.data
+  }
 }
-
 // Review API
 export const reviewAPI = {
   // Get reviews for a user
@@ -434,3 +441,4 @@ export const adminAPI = {
     }
   },
 }
+

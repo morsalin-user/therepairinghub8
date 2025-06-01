@@ -1,4 +1,3 @@
-// profile/page.js
 "use client"
 
 import { useState, useEffect } from "react"
@@ -16,6 +15,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { userAPI } from "@/lib/api"
 import FinancialDashboard from "@/components/financial-dashboard"
+import DeleteAccountModal from "@/components/delete-account-modal"
 
 export default function ProfilePage() {
   const { user, loading, updateUserData } = useAuth()
@@ -24,6 +24,7 @@ export default function ProfilePage() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState("")
   const [avatarFile, setAvatarFile] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const {
     register,
@@ -36,9 +37,6 @@ export default function ProfilePage() {
     if (!loading && !user) {
       router.push("/login")
     }
-
-
-    console.log("User data:", user);
 
     if (user) {
       // Reset form with current user data
@@ -82,9 +80,9 @@ export default function ProfilePage() {
         ...data,
         skills: data.skills
           ? data.skills
-            .split(",")
-            .map((skill) => skill.trim())
-            .filter((skill) => skill)
+              .split(",")
+              .map((skill) => skill.trim())
+              .filter((skill) => skill)
           : [],
       }
 
@@ -126,6 +124,23 @@ export default function ProfilePage() {
       })
     } finally {
       setIsUpdating(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    try {
+      const result = await userAPI.deleteAccount(user._id)
+      if (result.success) {
+        // The auth context will handle the logout and redirect
+        setShowDeleteModal(false)
+      }
+    } catch (error) {
+      console.error("Delete account error:", error)
+      toast({
+        title: "Deletion failed",
+        description: "There was a problem deleting your account",
+        variant: "destructive",
+      })
     }
   }
 
@@ -297,6 +312,26 @@ export default function ProfilePage() {
                   />
                   {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>}
                 </div>
+
+                {/* Danger Zone */}
+                <div className="border-t pt-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-medium text-red-600">Danger Zone</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Once you delete your account, there is no going back. Please be certain.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => setShowDeleteModal(true)}
+                      className="w-full sm:w-auto"
+                    >
+                      Delete My Account
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
               <CardFooter className="flex justify-end">
                 <Button type="submit" disabled={isUpdating}>
@@ -365,6 +400,12 @@ export default function ProfilePage() {
           <FinancialDashboard />
         </TabsContent>
       </Tabs>
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteAccount}
+        userEmail={user?.email || ""}
+      />
     </div>
   )
 }

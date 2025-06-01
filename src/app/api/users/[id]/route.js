@@ -1,4 +1,3 @@
-// api/users/[id]/route.js
 import { NextResponse } from "next/server"
 import connectToDatabase from "../../../../lib/db"
 import User from "../../../../models/User"
@@ -158,15 +157,101 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ success: false, message: "Not authorized to delete this user" }, { status: 403 })
     }
 
-    // Find and delete user
-    const user = await User.findByIdAndDelete(userId)
+    // Find user with all data
+    const user = await User.findById(userId).select("+password")
     if (!user) {
       return NextResponse.json({ success: false, message: "User not found" }, { status: 404 })
     }
 
+    // Import DeletedUser model
+    const DeletedUser = (await import("../../../../models/DeletedUser")).default
+
+    // Save user data to DeletedUser collection
+    const deletedUserData = {
+      name: user.name,
+      email: user.email,
+      password: user.password,
+      avatar: user.avatar,
+      bio: user.bio,
+      services: user.services,
+      skills: user.skills,
+      phone: user.phone,
+      address: user.address,
+      userType: user.userType,
+      isActive: user.isActive,
+      status: user.status,
+      rating: user.rating,
+      reviewCount: user.reviewCount,
+      clerkId: user.clerkId,
+      emailVerified: user.emailVerified,
+      jobs: user.jobs,
+      quotes: user.quotes,
+      reviews: user.reviews,
+      notifications: user.notifications,
+      balance: user.balance,
+      availableBalance: user.availableBalance,
+      totalEarnings: user.totalEarnings,
+      totalSpending: user.totalSpending,
+      paypalEmail: user.paypalEmail,
+      conversations: user.conversations,
+      resetPasswordToken: user.resetPasswordToken,
+      resetPasswordExpire: user.resetPasswordExpire,
+      originalUserId: user._id,
+      originalCreatedAt: user.createdAt,
+      originalUpdatedAt: user.updatedAt,
+      deletedAt: new Date(),
+      deletionReason: "User requested account deletion",
+    }
+
+    // Create deleted user record
+    await DeletedUser.create(deletedUserData)
+
+    // Delete user from Clerk if clerkId exists
+    if (user.clerkId) {
+      try {
+        const response = await fetch(`https://api.clerk.com/v1/users/${user.clerkId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+            "Content-Type": "application/json",
+          },
+        })
+
+        if (response.ok) {
+          console.log(`Successfully deleted user from Clerk: ${user.clerkId}`)
+        } else {
+          const errorData = await response.text()
+          console.error("Clerk deletion failed:", response.status, errorData)
+
+          // Try alternative method with clerkClient
+          try {
+            const { clerkClient } = await import("@clerk/nextjs/server")
+            await clerkClient.users.deleteUser(user.clerkId)
+            console.log(`Deleted user from Clerk using clerkClient: ${user.clerkId}`)
+          } catch (clientError) {
+            console.error("ClerkClient deletion also failed:", clientError)
+          }
+        }
+      } catch (clerkError) {
+        console.error("Error deleting user from Clerk:", clerkError)
+
+        // Try alternative method
+        try {
+          const { clerkClient } = await import("@clerk/nextjs/server")
+          await clerkClient.users.deleteUser(user.clerkId)
+          console.log(`Deleted user from Clerk using fallback method: ${user.clerkId}`)
+        } catch (fallbackError) {
+          console.error("All Clerk deletion methods failed:", fallbackError)
+        }
+      }
+    }
+
+    // Delete user from User collection
+    await User.findByIdAndDelete(userId)
+
     return NextResponse.json({
       success: true,
-      message: "User deleted successfully",
+      message: "User account deleted successfully",
     })
   } catch (error) {
     console.error("Delete user error:", error)

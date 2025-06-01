@@ -217,21 +217,24 @@ export const AuthProvider = ({ children }) => {
   }
 
   // Delete user account
+  // Delete user account
   const deleteAccount = async (userId) => {
     setLoading(true)
     try {
       const { success } = await authAPI.deleteAccount(userId)
       if (success) {
-        // Remove token and user data from localStorage
+        // Immediately clear auth state and storage
         localStorage.removeItem("auth_token")
         localStorage.removeItem("user")
-
         setUser(null)
+
         toast({
           title: "Account deleted",
           description: "Your account has been deleted successfully.",
         })
-        router.push("/")
+
+        // Immediate redirect to login page
+        router.push("/login")
         return true
       }
     } catch (error) {
