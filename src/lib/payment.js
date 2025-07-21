@@ -158,7 +158,7 @@ export const processPayPalPayment = async (amount, jobId, customerId, descriptio
     // Get PayPal access token
     const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_SECRET}`).toString("base64")
     const tokenResponse = await axios.post(
-      `${process.env.PAYPAL_API_URL}/v1/oauth2/token`,
+      `${process.env.PAYPAL_API_BASE_URL}/v1/oauth2/token`,
       "grant_type=client_credentials",
       {
         headers: {
@@ -172,7 +172,7 @@ export const processPayPalPayment = async (amount, jobId, customerId, descriptio
 
     // Create PayPal order
     const orderResponse = await axios.post(
-      `${process.env.PAYPAL_API_URL}/v2/checkout/orders`,
+      `${process.env.PAYPAL_API_BASE_URL}/v2/checkout/orders`,
       {
         intent: "CAPTURE",
         purchase_units: [
@@ -234,7 +234,7 @@ export const capturePayPalPayment = async (orderId) => {
     // Get PayPal access token
     const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_SECRET}`).toString("base64")
     const tokenResponse = await axios.post(
-      `${process.env.PAYPAL_API_URL}/v1/oauth2/token`,
+      `${process.env.PAYPAL_API_BASE_URL}/v1/oauth2/token`,
       "grant_type=client_credentials",
       {
         headers: {
@@ -248,7 +248,7 @@ export const capturePayPalPayment = async (orderId) => {
 
     // Capture the payment
     const captureResponse = await axios.post(
-      `${process.env.PAYPAL_API_URL}/v2/checkout/orders/${orderId}/capture`,
+      `${process.env.PAYPAL_API_BASE_URL}/v2/checkout/orders/${orderId}/capture`,
       {},
       {
         headers: {
