@@ -11,22 +11,33 @@ export async function POST(req) {
   try {
     await connectToDatabase()
 
-    // Verify PayPal webhook signature
     const headersList = headers()
-    const paypalSignature = headersList.get("paypal-transmission-sig")
-    const paypalCertUrl = headersList.get("paypal-cert-url")
-    const paypalTransmissionId = headersList.get("paypal-transmission-id")
-    const paypalTransmissionTime = headersList.get("paypal-transmission-time")
-
+    const transmissionId = headersList.get("paypal-transmission-id")
+    const certUrl = headersList.get("paypal-cert-url")
+    const transmissionSig = headersList.get("paypal-transmission-sig")
+    const transmissionTime = headersList.get("paypal-transmission-time")
+    const authAlgo = headersList.get("paypal-auth-algo")
     const webhookId = process.env.PAYPAL_WEBHOOK_ID
     const requestBody = await req.text()
 
-    // In a production environment, you would verify the signature here
-    // For this demo, we'll skip the verification
+    const isValid = await verifyPayPalWebhookSignature({
+      transmissionId,
+      transmissionSig,
+      transmissionTime,
+      certUrl,
+      authAlgo,
+      webhookId,
+      body: requestBody,
+    })
+
+    if (!isValid) {
+      console.error("❌ Invalid PayPal webhook signature")
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
+    }
 
     const event = JSON.parse(requestBody)
 
-    // Handle the event
+    // Handle events
     switch (event.event_type) {
       case "CHECKOUT.ORDER.APPROVED":
         await handleOrderApproved(event)
@@ -38,96 +49,122 @@ export async function POST(req) {
         await handlePaymentDenied(event)
         break
       default:
-        console.log(`Unhandled event type: ${event.event_type}`)
+        console.log(`⚠️ Unhandled event type: ${event.event_type}`)
     }
 
     return NextResponse.json({ received: true })
   } catch (error) {
-    console.error("PayPal webhook error:", error)
+    console.error("💥 PayPal webhook error:", error)
     return NextResponse.json({ success: false, message: error.message }, { status: 500 })
   }
 }
 
-// Handle order approved
-async function handleOrderApproved(event) {
+// ✅ Webhook verification using PayPal's API
+async function verifyPayPalWebhookSignature({
+  transmissionId,
+  transmissionSig,
+  transmissionTime,
+  certUrl,
+  authAlgo,
+  webhookId,
+  body,
+}) {
   try {
-    const orderId = event.resource.id
+    const basicAuth = Buffer.from(
+      `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
+    ).toString("base64")
 
-    // Find transaction by order ID
-    const transaction = await Transaction.findOne({ paymentId: orderId })
-    if (!transaction) {
-      console.error("Transaction not found for order:", orderId)
-      return
-    }
+    const tokenRes = await fetch(`${process.env.PAYPAL_API_BASE_URL}/v1/oauth2/token`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${basicAuth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: "grant_type=client_credentials",
+    })
 
-    // Update transaction status
-    transaction.status = "pending_capture"
-    await transaction.save()
+    const tokenData = await tokenRes.json()
+    const accessToken = tokenData.access_token
 
-    console.log("PayPal order approved for transaction:", transaction._id)
+    const verifyRes = await fetch(
+      `${process.env.PAYPAL_API_BASE_URL}/v1/notifications/verify-webhook-signature`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          auth_algo: authAlgo,
+          cert_url: certUrl,
+          transmission_id: transmissionId,
+          transmission_sig: transmissionSig,
+          transmission_time: transmissionTime,
+          webhook_id: webhookId,
+          webhook_event: JSON.parse(body),
+        }),
+      }
+    )
+
+    const verifyData = await verifyRes.json()
+    return verifyData.verification_status === "SUCCESS"
   } catch (error) {
-    console.error("Error handling order approved:", error)
+    console.error("💥 Error verifying PayPal webhook:", error)
+    return false
   }
 }
 
-// Handle payment captured
+// ✅ Handle order approved
+async function handleOrderApproved(event) {
+  try {
+    const orderId = event.resource.id
+    const transaction = await Transaction.findOne({ paymentId: orderId })
+    if (!transaction) return console.error("Transaction not found for order:", orderId)
+
+    transaction.status = "pending_capture"
+    await transaction.save()
+
+    console.log("✅ PayPal order approved for transaction:", transaction._id)
+  } catch (err) {
+    console.error("Error handling order approved:", err)
+  }
+}
+
+// ✅ Handle payment captured
 async function handlePaymentCaptured(event) {
   try {
-    const captureId = event.resource.id
     const orderId = event.resource.supplementary_data?.related_ids?.order_id
-
-    if (!orderId) {
-      console.error("Order ID not found in payment capture event")
-      return
-    }
-
-    // Find transaction by order ID
     const transaction = await Transaction.findOne({ paymentId: orderId })
-    if (!transaction) {
-      console.error("Transaction not found for order:", orderId)
-      return
-    }
+    if (!transaction) return console.error("Transaction not found for order:", orderId)
 
-    // Update transaction status
     transaction.status = "in_escrow"
     await transaction.save()
 
-    // Get the job
     const job = await Job.findById(transaction.job)
-    if (!job) {
-      console.error("Job not found for transaction:", transaction._id)
-      return
-    }
+    if (!job) return console.error("Job not found for transaction:", transaction._id)
 
-    // Set escrow end date (default 1 minute from now)
-    const escrowPeriodMinutes = Number.parseInt(process.env.ESCROW_PERIOD_MINUTES || "1", 10)
-    const escrowEndDate = new Date(Date.now() + escrowPeriodMinutes * 60 * 1000)
+    const escrowMinutes = parseInt(process.env.ESCROW_PERIOD_MINUTES || "1440", 10)
+    const escrowEndDate = new Date(Date.now() + escrowMinutes * 60 * 1000)
 
-    // Update job status
     job.status = "in_progress"
     job.paymentStatus = "in_escrow"
     job.escrowEndDate = escrowEndDate
     job.transactionId = transaction._id
     await job.save()
 
-    // Update buyer's spending
     await User.findByIdAndUpdate(transaction.customer, {
       $inc: { totalSpending: transaction.amount },
     })
 
-    // Create notification for job poster
-    const notification = await Notification.create({
+    const buyerNotification = await Notification.create({
       recipient: transaction.customer,
       type: "payment",
       message: `Payment successful for job: ${job.title}. Provider has been hired.`,
       relatedId: transaction._id,
       onModel: "Transaction",
     })
+    sendNotification(transaction.customer, buyerNotification)
 
-    // Send real-time notification
-    sendNotification(transaction.customer, notification)
-
-    // Create notification for provider
     const providerNotification = await Notification.create({
       recipient: job.hiredProvider,
       type: "job_assigned",
@@ -135,55 +172,34 @@ async function handlePaymentCaptured(event) {
       relatedId: job._id,
       onModel: "Job",
     })
-
-    // Send real-time notification to provider
     sendNotification(job.hiredProvider, providerNotification)
 
-    console.log("PayPal payment captured for transaction:", transaction._id)
+    console.log("✅ Payment captured for transaction:", transaction._id)
 
-    // Schedule job completion after escrow period
     scheduleJobCompletion(job._id, escrowEndDate)
-  } catch (error) {
-    console.error("Error handling payment captured:", error)
+  } catch (err) {
+    console.error("Error handling payment captured:", err)
   }
 }
 
-// Handle payment denied
+// ✅ Handle payment denied
 async function handlePaymentDenied(event) {
   try {
-    const captureId = event.resource.id
     const orderId = event.resource.supplementary_data?.related_ids?.order_id
-
-    if (!orderId) {
-      console.error("Order ID not found in payment denied event")
-      return
-    }
-
-    // Find transaction by order ID
     const transaction = await Transaction.findOne({ paymentId: orderId })
-    if (!transaction) {
-      console.error("Transaction not found for order:", orderId)
-      return
-    }
+    if (!transaction) return console.error("Transaction not found for order:", orderId)
 
-    // Update transaction status
     transaction.status = "failed"
     await transaction.save()
 
-    // Get job
     const job = await Job.findById(transaction.job)
-    if (!job) {
-      console.error("Job not found for transaction:", transaction._id)
-      return
-    }
+    if (!job) return console.error("Job not found for transaction:", transaction._id)
 
-    // Reset job status if payment failed
     job.status = "active"
     job.hiredProvider = null
     job.paymentStatus = "pending"
     await job.save()
 
-    // Create notification for job poster
     const notification = await Notification.create({
       recipient: transaction.customer,
       type: "payment",
@@ -191,99 +207,81 @@ async function handlePaymentDenied(event) {
       relatedId: transaction._id,
       onModel: "Transaction",
     })
-
-    // Send real-time notification
     sendNotification(transaction.customer, notification)
 
-    console.log("PayPal payment denied for transaction:", transaction._id)
-  } catch (error) {
-    console.error("Error handling payment denied:", error)
+    console.log("❌ Payment denied for transaction:", transaction._id)
+  } catch (err) {
+    console.error("Error handling payment denied:", err)
   }
 }
 
-// Schedule job completion after escrow period
+// ✅ Schedule job completion after escrow period
 async function scheduleJobCompletion(jobId, escrowEndDate) {
   const timeUntilCompletion = new Date(escrowEndDate).getTime() - Date.now()
 
   if (timeUntilCompletion <= 0) {
-    // If escrow period has already passed, complete job immediately
     await completeJob(jobId)
     return
   }
 
-  // Schedule job completion
+  if (timeUntilCompletion > 2147483647) {
+    console.warn(`Escrow too long. Consider using a queue system for job ${jobId}`)
+    return
+  }
+
   setTimeout(async () => {
     await completeJob(jobId)
   }, timeUntilCompletion)
 
-  console.log(`Job ${jobId} scheduled for completion in ${timeUntilCompletion}ms`)
+  console.log(`📅 Job ${jobId} scheduled for auto-completion in ${Math.round(timeUntilCompletion / 60000)} minutes`)
 }
 
-// Complete job and release payment
+// ✅ Complete job and release payment
 async function completeJob(jobId) {
   try {
     const job = await Job.findById(jobId)
+    if (!job || job.status !== "in_progress" || job.paymentStatus !== "in_escrow") return
 
-    if (!job) {
-      console.error("Job not found for completion:", jobId)
-      return
-    }
+    const transaction = await Transaction.findById(job.transactionId)
+    if (!transaction) return console.error("Transaction not found for job:", jobId)
 
-    // Only complete jobs that are still in escrow
-    if (job.status === "in_progress" && job.paymentStatus === "in_escrow") {
-      // Get transaction
-      const transaction = await Transaction.findById(job.transactionId)
-      if (!transaction) {
-        console.error("Transaction not found for job:", jobId)
-        return
-      }
+    transaction.provider = job.hiredProvider
+    transaction.status = "released"
+    await transaction.save()
 
-      // Update transaction
-      transaction.provider = job.hiredProvider
-      transaction.status = "released"
-      await transaction.save()
+    job.status = "completed"
+    job.paymentStatus = "released"
+    job.completedAt = new Date()
+    await job.save()
 
-      // Update job
-      job.status = "completed"
-      job.paymentStatus = "released"
-      job.completedAt = new Date()
-      await job.save()
+    const providerAmount = transaction.amount - transaction.serviceFee
+    await User.findByIdAndUpdate(job.hiredProvider, {
+      $inc: {
+        availableBalance: providerAmount,
+        totalEarnings: providerAmount,
+      },
+    })
 
-      // Calculate provider amount (minus service fee)
-      const providerAmount = transaction.amount - transaction.serviceFee
+    const buyerNotification = await Notification.create({
+      recipient: transaction.customer,
+      type: "job_completed",
+      message: `Your job "${job.title}" has been completed. Payment released to provider.`,
+      relatedId: job._id,
+      onModel: "Job",
+    })
+    const providerNotification = await Notification.create({
+      recipient: job.hiredProvider,
+      type: "payment",
+      message: `Payment for job "${job.title}" has been released to your account.`,
+      relatedId: transaction._id,
+      onModel: "Transaction",
+    })
 
-      // Update provider's available balance and total earnings
-      await User.findByIdAndUpdate(job.hiredProvider, {
-        $inc: {
-          availableBalance: providerAmount,
-          totalEarnings: providerAmount,
-        },
-      })
+    sendNotification(transaction.customer, buyerNotification)
+    sendNotification(job.hiredProvider, providerNotification)
 
-      // Create notifications
-      const buyerNotification = await Notification.create({
-        recipient: transaction.customer,
-        type: "job_completed",
-        message: `Your job "${job.title}" has been completed and payment has been released to the provider.`,
-        relatedId: job._id,
-        onModel: "Job",
-      })
-
-      const providerNotification = await Notification.create({
-        recipient: job.hiredProvider,
-        type: "payment",
-        message: `Payment for job "${job.title}" has been released to your account. Your available balance has been updated.`,
-        relatedId: transaction._id,
-        onModel: "Transaction",
-      })
-
-      // Send real-time notifications
-      sendNotification(transaction.customer, buyerNotification)
-      sendNotification(job.hiredProvider, providerNotification)
-
-      console.log(`Job ${jobId} completed and payment released automatically`)
-    }
-  } catch (error) {
-    console.error("Error completing job:", error)
+    console.log(`✅ Job ${jobId} completed and payment released`)
+  } catch (err) {
+    console.error("Error completing job:", err)
   }
 }
