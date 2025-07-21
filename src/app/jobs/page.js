@@ -1,5 +1,4 @@
 "use client"
-
 import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -11,8 +10,10 @@ import { Loader2, Search, Filter, MapPin } from "lucide-react"
 import JobListingPreview from "@/components/job-listing-preview"
 import { jobAPI } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
+import { useTranslation } from "@/lib/i18n"
 
 export default function Jobs() {
+  const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(true)
   const [jobs, setJobs] = useState([])
   const [filteredJobs, setFilteredJobs] = useState([])
@@ -24,7 +25,6 @@ export default function Jobs() {
   const { toast } = useToast()
 
   useEffect(() => {
-    // Fetch jobs data
     fetchJobs()
   }, [])
 
@@ -32,20 +32,17 @@ export default function Jobs() {
     try {
       setIsLoading(true)
       const { success, jobs } = await jobAPI.getJobs({ status: "active" })
-
       if (success) {
         setJobs(jobs)
         setFilteredJobs(jobs)
-
-        // Extract unique categories
         const uniqueCategories = [...new Set(jobs.map((job) => job.category).filter(Boolean))]
         setCategories(uniqueCategories)
       }
     } catch (error) {
       console.error("Error fetching jobs:", error)
       toast({
-        title: "Error",
-        description: "Failed to load jobs. Please try again.",
+        title: t("common.error"),
+        description: t("messages.error.generic"),
         variant: "destructive",
       })
     } finally {
@@ -54,31 +51,21 @@ export default function Jobs() {
   }
 
   useEffect(() => {
-    // Apply filters
     let results = jobs
-
-    // Search term filter
     if (searchTerm) {
       results = results.filter(
         (job) =>
           job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.description.toLowerCase().includes(searchTerm.toLowerCase()),
+          job.description.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
-
-    // Price range filter
     results = results.filter((job) => job.price >= priceRange[0] && job.price <= priceRange[1])
-
-    // Category filter
     if (category && category !== "all") {
       results = results.filter((job) => job.category === category)
     }
-
-    // Location filter
     if (location) {
       results = results.filter((job) => job.location.toLowerCase().includes(location.toLowerCase()))
     }
-
     setFilteredJobs(results)
   }, [searchTerm, priceRange, category, location, jobs])
 
@@ -119,12 +106,12 @@ export default function Jobs() {
         {/* Filters */}
         <Card className="w-full md:w-64 sticky top-20">
           <CardHeader>
-            <CardTitle className="text-xl">Filters</CardTitle>
-            <CardDescription>Refine your job search</CardDescription>
+            <CardTitle className="text-xl">{t("jobsPage.filters")}</CardTitle>
+            <CardDescription>{t("jobsPage.refineSearch")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Price Range</Label>
+              <Label className="text-sm font-medium">{t("jobsPage.priceRange")}</Label>
               <div className="pt-4">
                 <Slider
                   defaultValue={[0, 500]}
@@ -139,15 +126,14 @@ export default function Jobs() {
                 </div>
               </div>
             </div>
-
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Category</Label>
+              <Label className="text-sm font-medium">{t("jobsPage.category")}</Label>
               <Select value={category} onValueChange={handleCategoryChange}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Categories" />
+                  <SelectValue placeholder={t("jobsPage.allCategories")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">{t("jobsPage.allCategories")}</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {cat}
@@ -156,43 +142,47 @@ export default function Jobs() {
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Location</Label>
+              <Label className="text-sm font-medium">{t("jobsPage.location")}</Label>
               <div className="relative">
                 <MapPin className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                <Input placeholder="Enter location" value={location} onChange={handleLocationChange} className="pl-8" />
+                <Input
+                  placeholder={t("jobsPage.enterLocation")}
+                  value={location}
+                  onChange={handleLocationChange}
+                  className="pl-8"
+                />
               </div>
             </div>
-
             <Button variant="outline" className="w-full" onClick={resetFilters}>
-              Reset Filters
+              {t("jobsPage.resetFilters")}
             </Button>
           </CardContent>
         </Card>
-
         {/* Job Listings */}
         <div className="flex-1">
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
               <div className="relative flex-1">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                <Input placeholder="Search jobs..." value={searchTerm} onChange={handleSearch} className="pl-8" />
+                <Input
+                  placeholder={t("jobsPage.searchJobs")}
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="pl-8"
+                />
               </div>
-
               {/* Mobile filters button */}
               <Button variant="outline" className="sm:hidden flex items-center gap-2">
                 <Filter className="h-4 w-4" />
-                Filters
+                {t("jobsPage.filters")}
               </Button>
             </div>
-
             <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold">Available Jobs</h1>
-              <p className="text-gray-500">{filteredJobs.length} jobs found</p>
+              <h1 className="text-2xl font-bold">{t("jobsPage.availableJobs")}</h1>
+              <p className="text-gray-500">{t("jobsPage.jobsFound", { count: filteredJobs.length })}</p>
             </div>
           </div>
-
           {filteredJobs.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredJobs.map((job) => (
@@ -209,9 +199,9 @@ export default function Jobs() {
             </div>
           ) : (
             <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <h3 className="text-xl font-medium mb-2">No jobs found</h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">Try adjusting your filters or search terms</p>
-              <Button onClick={resetFilters}>Reset Filters</Button>
+              <h3 className="text-xl font-medium mb-2">{t("jobsPage.noJobsFound")}</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">{t("jobsPage.adjustFilters")}</p>
+              <Button onClick={resetFilters}>{t("jobsPage.resetFilters")}</Button>
             </div>
           )}
         </div>

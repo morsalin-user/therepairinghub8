@@ -1,5 +1,4 @@
 "use client"
-
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -15,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { useTranslation } from "@/lib/i18n"
 import OTPVerificationModal from "@/components/otp-verification-modal"
 
 // Form validation schema
@@ -40,6 +40,7 @@ export default function Register() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showOTPModal, setShowOTPModal] = useState(false)
   const [registrationData, setRegistrationData] = useState(null)
+  const { t } = useTranslation()
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -56,17 +57,14 @@ export default function Register() {
   const onSubmit = async (data) => {
     if (!isLoaded || !signUp) {
       toast({
-        title: "Loading...",
-        description: "Please wait while we initialize the verification system.",
+        title: t("auth.register.loading"),
+        description: t("auth.register.pleaseWait"),
         variant: "destructive",
       })
       return
     }
-
     setIsSubmitting(true)
-
     try {
-      // Store registration data for later use
       setRegistrationData({
         name: data.name,
         email: data.email,
@@ -74,9 +72,6 @@ export default function Register() {
         phone: data.phone,
         userType: data.userType,
       })
-
-      // Start Clerk sign up process for OTP verification
-      // Try without CAPTCHA first
       try {
         await signUp.create({
           emailAddress: data.email,
@@ -86,64 +81,48 @@ export default function Register() {
           },
         })
       } catch (createError) {
-        // If that fails, try with minimal data
         console.log("First attempt failed, trying minimal approach:", createError)
         await signUp.create({
           emailAddress: data.email,
           password: data.password,
         })
       }
-
-      // Prepare email verification
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" })
-
-      // Show OTP modal
       setShowOTPModal(true)
-
       toast({
-        title: "Verification Code Sent",
-        description: "Please check your email for the verification code.",
+        title: t("auth.register.verificationCodeSent"),
+        description: t("auth.register.checkEmail"),
       })
     } catch (error) {
       console.error("Registration error:", error)
-
-      let errorMessage = "Registration failed. Please try again."
-
+      let errorMessage = t("auth.register.registrationFailed")
       if (error.errors && error.errors.length > 0) {
         const clerkError = error.errors[0]
         console.log("Clerk error details:", clerkError)
-
         if (clerkError.code === "form_identifier_exists") {
-          errorMessage = "An account with this email already exists."
+          errorMessage = t("auth.register.emailExists")
         } else if (clerkError.code === "form_password_pwned") {
-          errorMessage = "This password has been found in a data breach. Please choose a different password."
+          errorMessage = t("auth.register.passwordBreached")
         } else if (clerkError.code === "form_password_length_too_short") {
-          errorMessage = "Password must be at least 8 characters long."
+          errorMessage = t("auth.register.passwordTooShort")
         } else if (
           clerkError.code === "captcha_invalid" ||
           clerkError.code === "captcha_failed" ||
           clerkError.message?.includes("CAPTCHA")
         ) {
-          // For CAPTCHA issues, let's try a different approach
-          errorMessage = "Verification system temporarily unavailable. Please try again in a moment."
-
-          // Try to reset and retry
+          errorMessage = t("auth.register.verificationUnavailable")
           setTimeout(async () => {
             try {
-              // Clear any existing signup state
               if (signUp) {
-                // Try a simple create without any extra parameters
                 await signUp.create({
                   emailAddress: data.email,
                   password: data.password,
                 })
-
                 await signUp.prepareEmailAddressVerification({ strategy: "email_code" })
                 setShowOTPModal(true)
-
                 toast({
-                  title: "Verification Code Sent",
-                  description: "Please check your email for the verification code.",
+                  title: t("auth.register.verificationCodeSent"),
+                  description: t("auth.register.checkEmail"),
                 })
               }
             } catch (retryError) {
@@ -154,9 +133,8 @@ export default function Register() {
           errorMessage = clerkError.longMessage || clerkError.message || errorMessage
         }
       }
-
       toast({
-        title: "Registration Error",
+        title: t("auth.register.registrationError"),
         description: errorMessage,
         variant: "destructive",
       })
@@ -167,7 +145,6 @@ export default function Register() {
 
   const handleVerificationSuccess = async (clerkUser) => {
     try {
-      // Create user in your backend with Clerk data
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -179,44 +156,38 @@ export default function Register() {
           emailVerified: true,
         }),
       })
-
       const result = await response.json()
-
       if (result.success) {
-        // Set user state and token directly
         setUserDirectly(result.user, result.token)
-
         toast({
-          title: "Registration Successful",
-          description: "Your account has been created successfully!",
+          title: t("auth.register.registrationSuccessful"),
+          description: t("auth.register.accountCreated"),
         })
-
         router.push("/profile")
       } else {
         toast({
-          title: "Registration Failed",
-          description: result.message || "Failed to complete registration.",
+          title: t("auth.register.registrationFailed"),
+          description: result.message || t("auth.register.failedToCompleteRegistration"),
           variant: "destructive",
         })
       }
     } catch (error) {
       console.error("Backend registration error:", error)
       toast({
-        title: "Registration Error",
-        description: "Failed to complete registration. Please try again.",
+        title: t("auth.register.registrationError"),
+        description: t("auth.register.failedToCompleteRegistration"),
         variant: "destructive",
       })
     }
   }
 
-  // Show loading state if Clerk is not loaded
   if (!isLoaded) {
     return (
       <div className="container max-w-md mx-auto py-10">
         <Card>
           <CardContent className="flex items-center justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            <span>Loading...</span>
+            <span>{t("common.loading")}</span>
           </CardContent>
         </Card>
       </div>
@@ -227,61 +198,56 @@ export default function Register() {
     <div className="container max-w-md mx-auto py-10">
       <Card>
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Enter your information to create an account</CardDescription>
+          <CardTitle className="text-2xl">{t("auth.register.title")}</CardTitle>
+          <CardDescription>{t("auth.register.subtitle")}</CardDescription>
         </CardHeader>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" placeholder="John Doe" {...form.register("name")} />
+              <Label htmlFor="name">{t("auth.register.firstName")}</Label>
+              <Input id="name" placeholder={t("auth.register.firstNamePlaceholder")} {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
               )}
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="john@example.com" {...form.register("email")} />
+              <Label htmlFor="email">{t("auth.register.email")}</Label>
+              <Input id="email" type="email" placeholder={t("auth.register.emailPlaceholder")} {...form.register("email")} />
               {form.formState.errors.email && (
                 <p className="text-sm text-red-500">{form.formState.errors.email.message}</p>
               )}
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" placeholder="(123) 456-7890" {...form.register("phone")} />
+              <Label htmlFor="phone">{t("auth.register.phone")}</Label>
+              <Input id="phone" placeholder={t("auth.register.phonePlaceholder")} {...form.register("phone")} />
               {form.formState.errors.phone && (
                 <p className="text-sm text-red-500">{form.formState.errors.phone.message}</p>
               )}
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="userType">I want to</Label>
+              <Label htmlFor="userType">{t("auth.register.userType")}</Label>
               <Select onValueChange={(value) => form.setValue("userType", value)}>
                 <SelectTrigger id="userType">
-                  <SelectValue placeholder="Select user type" />
+                  <SelectValue placeholder={t("auth.register.selectUserType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Buyer">Hire for Services</SelectItem>
-                  <SelectItem value="Seller">Offer Services</SelectItem>
+                  <SelectItem value="Buyer">{t("auth.register.buyer")}</SelectItem>
+                  <SelectItem value="Seller">{t("auth.register.seller")}</SelectItem>
                 </SelectContent>
               </Select>
               {form.formState.errors.userType && (
                 <p className="text-sm text-red-500">{form.formState.errors.userType.message}</p>
               )}
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("auth.register.password")}</Label>
               <Input id="password" type="password" {...form.register("password")} />
               {form.formState.errors.password && (
                 <p className="text-sm text-red-500">{form.formState.errors.password.message}</p>
               )}
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">{t("auth.register.confirmPassword")}</Label>
               <Input id="confirmPassword" type="password" {...form.register("confirmPassword")} />
               {form.formState.errors.confirmPassword && (
                 <p className="text-sm text-red-500">{form.formState.errors.confirmPassword.message}</p>
@@ -293,23 +259,21 @@ export default function Register() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending Verification Code...
+                  {t("auth.register.sendingVerificationCode")}
                 </>
               ) : (
-                "Create Account"
+                t("auth.register.registerButton")
               )}
             </Button>
           </CardFooter>
         </form>
         <div className="px-8 pb-6 text-center text-sm">
-          Already have an account?{" "}
+          {t("auth.register.hasAccount")}{" "}
           <Link href="/login" className="underline">
-            Sign in
+            {t("auth.register.signIn")}
           </Link>
         </div>
       </Card>
-
-      {/* OTP Verification Modal */}
       {showOTPModal && registrationData && (
         <OTPVerificationModal
           isOpen={showOTPModal}

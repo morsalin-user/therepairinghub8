@@ -1,5 +1,4 @@
 "use client"
-
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -7,8 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useTranslation } from "@/lib/i18n"
 
 export default function PaymentSuccess() {
+  const { t } = useTranslation()
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -25,10 +26,10 @@ export default function PaymentSuccess() {
         const payerId = searchParams.get("PayerID")
 
         if (!jobId) {
-          setError("Missing job information")
+          setError(t("paymentSuccessPage.missingJobInformation"))
           toast({
-            title: "Error",
-            description: "Missing job information",
+            title: t("common.error"),
+            description: t("paymentSuccessPage.missingJobInformation"),
             variant: "destructive",
           })
           router.push("/profile")
@@ -37,7 +38,6 @@ export default function PaymentSuccess() {
 
         setJobId(jobId)
 
-        // If this is a PayPal return with PayerID, we need to capture the payment
         if (paymentId && payerId) {
           console.log("Capturing PayPal payment:", { paymentId, payerId, jobId })
           const response = await fetch(`/api/payments/paypal/capture`, {
@@ -55,31 +55,27 @@ export default function PaymentSuccess() {
           const data = await response.json()
 
           if (!data.success) {
-            setError(data.message || "Failed to capture payment")
+            setError(data.message || t("paymentSuccessPage.failedToCapturePayment"))
             toast({
-              title: "Payment Error",
-              description: data.message || "Failed to capture payment",
+              title: t("paymentSuccessPage.paymentError"),
+              description: data.message || t("paymentSuccessPage.failedToCapturePayment"),
               variant: "destructive",
             })
           } else {
             toast({
-              title: "Payment Successful",
-              description: "Your payment has been processed successfully",
+              title: t("paymentSuccessPage.paymentSuccessful"),
+              description: t("paymentSuccessPage.paymentProcessed"),
             })
           }
         } else {
-          // For Stripe payments or when returning to this page, manually trigger webhook for testing
           if (process.env.NODE_ENV === "development") {
             console.log("Manually triggering webhook for testing in development")
             try {
-              // Fetch job details to display
               const jobResponse = await fetch(`/api/jobs/${jobId}`)
               const jobData = await jobResponse.json()
 
               if (jobData.success) {
                 setJobDetails(jobData.job)
-
-                // Manually trigger webhook processing for the job
                 const webhookResponse = await fetch(`/api/payments/webhook/manual-trigger`, {
                   method: "POST",
                   headers: {
@@ -87,7 +83,6 @@ export default function PaymentSuccess() {
                   },
                   body: JSON.stringify({ jobId }),
                 })
-
                 const webhookData = await webhookResponse.json()
                 console.log("Manual webhook trigger response:", webhookData)
               }
@@ -96,14 +91,13 @@ export default function PaymentSuccess() {
             }
           }
         }
-
         setIsLoading(false)
       } catch (error) {
         console.error("Payment capture error:", error)
-        setError("There was a problem processing your payment")
+        setError(t("paymentSuccessPage.errorProcessingPayment"))
         toast({
-          title: "Payment Error",
-          description: "There was a problem processing your payment",
+          title: t("paymentSuccessPage.paymentError"),
+          description: t("paymentSuccessPage.errorProcessingPayment"),
           variant: "destructive",
         })
         setIsLoading(false)
@@ -111,15 +105,15 @@ export default function PaymentSuccess() {
     }
 
     capturePayment()
-  }, [searchParams, router, toast])
+  }, [searchParams, router, toast, t])
 
   return (
     <div className="container max-w-md mx-auto py-10">
       <Card>
         <CardHeader className="text-center">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <CardTitle className="text-2xl">Payment Successful!</CardTitle>
-          <CardDescription>Your payment has been processed successfully</CardDescription>
+          <CardTitle className="text-2xl">{t("paymentSuccessPage.paymentSuccessful")}</CardTitle>
+          <CardDescription>{t("paymentSuccessPage.paymentProcessed")}</CardDescription>
         </CardHeader>
         <CardContent className="text-center">
           {isLoading ? (
@@ -131,13 +125,13 @@ export default function PaymentSuccess() {
           ) : (
             <div>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Thank you for your payment. The service provider has been notified and will begin work on your job.
+                {t("paymentSuccessPage.thankYouMessage")}
               </p>
               {jobDetails && (
                 <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
                   <h3 className="font-medium">{jobDetails.title}</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Status: {jobDetails.status === "in_progress" ? "In Progress" : jobDetails.status}
+                    {t("paymentSuccessPage.status")}: {jobDetails.status === "in_progress" ? t("paymentSuccessPage.inProgress") : jobDetails.status}
                   </p>
                 </div>
               )}
@@ -147,11 +141,11 @@ export default function PaymentSuccess() {
         <CardFooter className="flex justify-center gap-4">
           {jobId && (
             <Button asChild>
-              <Link href={`/jobs/${jobId}`}>View Job Details</Link>
+              <Link href={`/jobs/${jobId}`}>{t("paymentSuccessPage.viewJobDetails")}</Link>
             </Button>
           )}
           <Button variant="outline" asChild>
-            <Link href="/profile">Go to Profile</Link>
+            <Link href="/profile">{t("paymentSuccessPage.goToProfile")}</Link>
           </Button>
         </CardFooter>
       </Card>

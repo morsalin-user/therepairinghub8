@@ -1,5 +1,4 @@
 "use client"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
@@ -18,6 +17,7 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/auth-context"
+import { useTranslation } from "@/lib/i18n"
 import { jobAPI } from "@/lib/api"
 
 // Form schema
@@ -31,6 +31,7 @@ const formSchema = z.object({
 })
 
 export default function PostJobPage() {
+  const { t } = useTranslation()
   const { user, isAuthenticated } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
@@ -67,39 +68,35 @@ export default function PostJobPage() {
   const onSubmit = async (data) => {
     if (!isAuthenticated || user?.userType !== "Buyer") {
       toast({
-        title: "Access denied",
-        description: "You must be logged in as a buyer to post a job",
+        title: t("postJobPage.accessDenied"),
+        description: t("postJobPage.onlyBuyersCanPostJobs"),
         variant: "destructive",
       })
       return
     }
-
     setIsSubmitting(true)
-
     try {
       console.log("Submitting job data:", data)
       const result = await jobAPI.createJob(data)
-
       if (result.success) {
         toast({
-          title: "Job posted successfully",
-          description: "Your job has been posted and is now visible to providers",
+          title: t("postJobPage.jobPosted"),
+          description: t("messages.success.jobCreated"),
         })
-
         // Redirect to job page
         router.push(`/jobs/${result.job._id}`)
       } else {
         toast({
-          title: "Failed to post job",
-          description: result.message || "There was a problem posting your job",
+          title: t("postJobPage.jobPostFailed"),
+          description: result.message || t("messages.error.generic"),
           variant: "destructive",
         })
       }
     } catch (error) {
       console.error("Job creation error:", error)
       toast({
-        title: "Error",
-        description: "There was a problem posting your job. Please try again.",
+        title: t("common.error"),
+        description: t("messages.error.generic"),
         variant: "destructive",
       })
     } finally {
@@ -112,14 +109,14 @@ export default function PostJobPage() {
     return (
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>Access Denied</CardTitle>
-          <CardDescription>Only buyers can post jobs</CardDescription>
+          <CardTitle>{t("postJobPage.accessDenied")}</CardTitle>
+          <CardDescription>{t("postJobPage.onlyBuyersCanPostJobs")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Your account type does not have permission to post jobs. Please log in as a buyer to continue.</p>
+          <p>{t("postJobPage.permissionDenied")}</p>
         </CardContent>
         <CardFooter>
-          <Button onClick={() => router.push("/")}>Return to Home</Button>
+          <Button onClick={() => router.push("/")}>{t("postJobPage.returnToHome")}</Button>
         </CardFooter>
       </Card>
     )
@@ -127,12 +124,11 @@ export default function PostJobPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Post a New Job</h1>
-
+      <h1 className="text-3xl font-bold mb-6">{t("postJobPage.title")}</h1>
       <Card>
         <CardHeader>
-          <CardTitle>Job Details</CardTitle>
-          <CardDescription>Provide details about the repair job you need help with</CardDescription>
+          <CardTitle>{t("postJobPage.jobDetails")}</CardTitle>
+          <CardDescription>{t("postJobPage.subtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -142,74 +138,70 @@ export default function PostJobPage() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Job Title</FormLabel>
+                    <FormLabel>{t("postJobPage.jobTitle")}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Fix leaking kitchen faucet" {...field} />
+                      <Input placeholder={t("postJobPage.jobTitlePlaceholder")} {...field} />
                     </FormControl>
-                    <FormDescription>A clear title helps providers understand your needs</FormDescription>
+                    <FormDescription>{t("postJobPage.jobTitleDescription")}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>{t("postJobPage.description")}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Describe the issue in detail, including any relevant information"
+                        placeholder={t("postJobPage.descriptionPlaceholder")}
                         className="min-h-32"
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>Be specific about the problem and what needs to be done</FormDescription>
+                    <FormDescription>{t("postJobPage.descriptionDescription")}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Budget ($)</FormLabel>
+                      <FormLabel>{t("postJobPage.budget")}</FormLabel>
                       <FormControl>
-                        <Input type="number" min="5" step="0.01" placeholder="e.g., 50.00" {...field} />
+                        <Input type="number" min="5" step="0.01" placeholder={t("postJobPage.budgetPlaceholder")} {...field} />
                       </FormControl>
-                      <FormDescription>Your maximum budget for this job</FormDescription>
+                      <FormDescription>{t("postJobPage.budgetDescription")}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Location</FormLabel>
+                      <FormLabel>{t("postJobPage.location")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., New York, NY" {...field} />
+                        <Input placeholder={t("postJobPage.locationPlaceholder")} {...field} />
                       </FormControl>
-                      <FormDescription>Where the job needs to be done</FormDescription>
+                      <FormDescription>{t("postJobPage.locationDescription")}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Preferred Date</FormLabel>
+                      <FormLabel>{t("postJobPage.preferredDate")}</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -220,7 +212,7 @@ export default function PostJobPage() {
                                 !field.value && "text-muted-foreground",
                               )}
                             >
-                              {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                              {field.value ? format(field.value, "PPP") : <span>{t("postJobPage.selectDate")}</span>}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
@@ -235,22 +227,21 @@ export default function PostJobPage() {
                           />
                         </PopoverContent>
                       </Popover>
-                      <FormDescription>When you would like the job to be done</FormDescription>
+                      <FormDescription>{t("postJobPage.preferredDateDescription")}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
+                      <FormLabel>{t("postJobPage.category")}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a category" />
+                            <SelectValue placeholder={t("postJobPage.selectCategory")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -261,21 +252,20 @@ export default function PostJobPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>Select the category that best fits your job</FormDescription>
+                      <FormDescription>{t("postJobPage.categoryDescription")}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Posting Job...
+                    {t("postJobPage.postingJob")}
                   </>
                 ) : (
-                  "Post Job"
+                  t("postJobPage.postJob")
                 )}
               </Button>
             </form>

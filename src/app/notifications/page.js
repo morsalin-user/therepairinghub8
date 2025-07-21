@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -10,8 +9,10 @@ import { Loader2, Bell, Check } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { useNotifications } from "@/contexts/notification-context"
+import { useTranslation } from "@/lib/i18n"
 
 export default function NotificationsPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { toast } = useToast()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
@@ -19,13 +20,11 @@ export default function NotificationsPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Redirect if not authenticated
     if (!authLoading) {
       if (!isAuthenticated) {
         router.push("/login")
         return
       }
-
       setIsLoading(false)
     }
   }, [user, isAuthenticated, authLoading, router])
@@ -33,8 +32,8 @@ export default function NotificationsPage() {
   const handleMarkAllAsRead = async () => {
     await markAllAsRead()
     toast({
-      title: "All notifications marked as read",
-      description: "Your notifications have been updated.",
+      title: t("notificationsPage.notificationsUpdatedTitle"),
+      description: t("notificationsPage.notificationsUpdated"),
     })
   }
 
@@ -88,15 +87,14 @@ export default function NotificationsPage() {
   return (
     <div className="container py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Notifications</h1>
+        <h1 className="text-3xl font-bold">{t("notificationsPage.notifications")}</h1>
         {unreadCount > 0 && (
           <Button variant="outline" onClick={handleMarkAllAsRead}>
             <Check className="h-4 w-4 mr-2" />
-            Mark all as read
+            {t("notificationsPage.markAllAsRead")}
           </Button>
         )}
       </div>
-
       {notifications.length > 0 ? (
         <div className="space-y-4">
           {notifications.map((notification) => (
@@ -123,7 +121,7 @@ export default function NotificationsPage() {
                     <div className="flex justify-between items-center mt-4">
                       <Link href={getNotificationLink(notification)}>
                         <Button variant="outline" size="sm">
-                          View Details
+                          {t("notificationsPage.viewDetails")}
                         </Button>
                       </Link>
                       {!notification.read && (
@@ -134,7 +132,7 @@ export default function NotificationsPage() {
                           className="text-blue-600"
                         >
                           <Check className="h-4 w-4 mr-1" />
-                          Mark as read
+                          {t("notificationsPage.markAsRead")}
                         </Button>
                       )}
                     </div>
@@ -147,10 +145,10 @@ export default function NotificationsPage() {
       ) : (
         <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <Bell className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-xl font-medium mb-2">No notifications</h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">You don't have any notifications at the moment.</p>
+          <h3 className="text-xl font-medium mb-2">{t("notificationsPage.noNotifications")}</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">{t("notificationsPage.noNotificationsMessage")}</p>
           <Button asChild>
-            <Link href="/">Return to Home</Link>
+            <Link href="/">{t("notificationsPage.returnToHome")}</Link>
           </Button>
         </div>
       )}

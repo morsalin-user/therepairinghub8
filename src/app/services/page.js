@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,8 +9,10 @@ import { Badge } from "@/components/ui/badge"
 import { Loader2, Search, Star, MapPin } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { userAPI } from "@/lib/api"
+import { useTranslation } from "@/lib/i18n"
 
 export default function ServicesPage() {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [providers, setProviders] = useState([])
@@ -27,7 +28,6 @@ export default function ServicesPage() {
     try {
       setIsLoading(true)
       const { success, users } = await userAPI.getServiceProviders({ userType: "Seller" })
-
       if (success) {
         setProviders(users)
         setFilteredProviders(users)
@@ -35,8 +35,8 @@ export default function ServicesPage() {
     } catch (error) {
       console.error("Error fetching service providers:", error)
       toast({
-        title: "Error",
-        description: "Failed to load service providers. Please try again.",
+        title: t("common.error"),
+        description: t("servicesPage.errorLoadingServiceProviders"),
         variant: "destructive",
       })
     } finally {
@@ -45,10 +45,7 @@ export default function ServicesPage() {
   }
 
   useEffect(() => {
-    // Apply filters
     let results = providers
-
-    // Search term filter
     if (searchTerm) {
       results = results.filter(
         (provider) =>
@@ -57,14 +54,11 @@ export default function ServicesPage() {
           (provider.bio && provider.bio.toLowerCase().includes(searchTerm.toLowerCase())),
       )
     }
-
-    // Category filter
     if (selectedCategory) {
       results = results.filter(
         (provider) => provider.services && provider.services.toLowerCase().includes(selectedCategory.toLowerCase()),
       )
     }
-
     setFilteredProviders(results)
   }, [searchTerm, selectedCategory, providers])
 
@@ -76,7 +70,6 @@ export default function ServicesPage() {
     setSelectedCategory(category === selectedCategory ? "" : category)
   }
 
-  // Extract unique categories from providers' services
   const categories = [
     ...new Set(
       providers
@@ -95,20 +88,18 @@ export default function ServicesPage() {
 
   return (
     <div className="container py-10">
-      <h1 className="text-3xl font-bold mb-6">Service Providers</h1>
-
+      <h1 className="text-3xl font-bold mb-6">{t("servicesPage.title")}</h1>
       {/* Search and Filters */}
       <div className="mb-8">
         <div className="relative mb-4">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search for service providers or services..."
+            placeholder={t("servicesPage.searchPlaceholder")}
             value={searchTerm}
             onChange={handleSearch}
             className="pl-10"
           />
         </div>
-
         <div className="flex flex-wrap gap-2">
           {categories.map((category) => (
             <Badge
@@ -122,7 +113,6 @@ export default function ServicesPage() {
           ))}
         </div>
       </div>
-
       {/* Service Providers List */}
       {filteredProviders.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -161,10 +151,10 @@ export default function ServicesPage() {
                     </div>
                   </div>
                   <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
-                    {provider.bio || "No bio provided"}
+                    {provider.bio || t("servicesPage.noBioProvided")}
                   </p>
                   <div className="mb-4">
-                    <h4 className="text-sm font-medium mb-2">Services:</h4>
+                    <h4 className="text-sm font-medium mb-2">{t("servicesPage.services")}</h4>
                     <div className="flex flex-wrap gap-1">
                       {provider.services
                         ? provider.services.split(",").map((service, index) => (
@@ -172,13 +162,13 @@ export default function ServicesPage() {
                               {service.trim()}
                             </Badge>
                           ))
-                        : "No services listed"}
+                        : t("servicesPage.noServicesListed")}
                     </div>
                   </div>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-800 p-4 border-t">
                   <Button asChild className="w-full">
-                    <Link href={`/providers/${provider._id}`}>View Profile</Link>
+                    <Link href={`/providers/${provider._id}`}>{t("servicesPage.viewProfile")}</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -187,9 +177,9 @@ export default function ServicesPage() {
         </div>
       ) : (
         <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <h3 className="text-xl font-medium mb-2">No service providers found</h3>
+          <h3 className="text-xl font-medium mb-2">{t("servicesPage.noServiceProvidersFound")}</h3>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
-            Try adjusting your search or filters to find service providers
+            {t("servicesPage.adjustSearchOrFilters")}
           </p>
           <Button
             onClick={() => {
@@ -197,7 +187,7 @@ export default function ServicesPage() {
               setSelectedCategory("")
             }}
           >
-            Clear Filters
+            {t("servicesPage.clearFilters")}
           </Button>
         </div>
       )}

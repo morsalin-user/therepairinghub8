@@ -1,5 +1,4 @@
 "use client"
-
 import { useState } from "react"
 import { useSignUp } from "@clerk/nextjs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -8,8 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, X } from "lucide-react"
+import { useTranslation } from "@/lib/i18n"
 
 export default function OTPVerificationModal({ isOpen, onClose, email, onVerificationSuccess }) {
+  const { t } = useTranslation()
   const [otp, setOtp] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [isResending, setIsResending] = useState(false)
@@ -19,59 +20,50 @@ export default function OTPVerificationModal({ isOpen, onClose, email, onVerific
   const handleVerifyOTP = async () => {
     if (!isLoaded || !signUp) {
       toast({
-        title: "Error",
-        description: "Verification system not ready. Please try again.",
+        title: t("otpVerificationModal.error"),
+        description: t("otpVerificationModal.verificationSystemNotReady"),
         variant: "destructive",
       })
       return
     }
-
     if (!otp || otp.length !== 6) {
       toast({
-        title: "Invalid OTP",
-        description: "Please enter a valid 6-digit OTP code.",
+        title: t("otpVerificationModal.invalidOTP"),
+        description: t("otpVerificationModal.invalidOTPDescription"),
         variant: "destructive",
       })
       return
     }
-
     setIsVerifying(true)
-
     try {
-      // Verify the OTP with Clerk
       const completeSignUp = await signUp.attemptEmailAddressVerification({
         code: otp,
       })
-
       if (completeSignUp.status === "complete") {
-        // OTP verified successfully - pass the Clerk user to parent
         onVerificationSuccess(completeSignUp.createdUserId ? { id: completeSignUp.createdUserId } : completeSignUp)
         onClose()
       } else {
         toast({
-          title: "Verification Failed",
-          description: "Invalid OTP code. Please try again.",
+          title: t("otpVerificationModal.verificationFailed"),
+          description: t("otpVerificationModal.invalidOTPCode"),
           variant: "destructive",
         })
       }
     } catch (error) {
       console.error("OTP verification error:", error)
-
-      let errorMessage = "Failed to verify OTP. Please try again."
-
+      let errorMessage = t("otpVerificationModal.failedToVerifyOTP")
       if (error.errors && error.errors.length > 0) {
         const clerkError = error.errors[0]
         if (clerkError.code === "form_code_incorrect") {
-          errorMessage = "The verification code is incorrect. Please try again."
+          errorMessage = t("otpVerificationModal.verificationCodeIncorrect")
         } else if (clerkError.code === "verification_expired") {
-          errorMessage = "The verification code has expired. Please request a new one."
+          errorMessage = t("otpVerificationModal.verificationCodeExpired")
         } else {
           errorMessage = clerkError.longMessage || clerkError.message || errorMessage
         }
       }
-
       toast({
-        title: "Verification Error",
+        title: t("otpVerificationModal.verificationError"),
         description: errorMessage,
         variant: "destructive",
       })
@@ -83,34 +75,29 @@ export default function OTPVerificationModal({ isOpen, onClose, email, onVerific
   const handleResendOTP = async () => {
     if (!isLoaded || !signUp) {
       toast({
-        title: "Error",
-        description: "Verification system not ready. Please try again.",
+        title: t("otpVerificationModal.error"),
+        description: t("otpVerificationModal.verificationSystemNotReady"),
         variant: "destructive",
       })
       return
     }
-
     setIsResending(true)
-
     try {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" })
       toast({
-        title: "OTP Resent",
-        description: "A new verification code has been sent to your email.",
+        title: t("otpVerificationModal.otpResent"),
+        description: t("otpVerificationModal.newVerificationCodeSent"),
       })
-      setOtp("") // Clear the current OTP input
+      setOtp("")
     } catch (error) {
       console.error("Resend OTP error:", error)
-
-      let errorMessage = "Failed to resend OTP. Please try again."
-
+      let errorMessage = t("otpVerificationModal.failedToResendOTP")
       if (error.errors && error.errors.length > 0) {
         const clerkError = error.errors[0]
         errorMessage = clerkError.longMessage || clerkError.message || errorMessage
       }
-
       toast({
-        title: "Resend Failed",
+        title: t("otpVerificationModal.error"),
         description: errorMessage,
         variant: "destructive",
       })
@@ -129,24 +116,22 @@ export default function OTPVerificationModal({ isOpen, onClose, email, onVerific
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle>Verify Your Email</DialogTitle>
+            <DialogTitle>{t("otpVerificationModal.verifyYourEmail")}</DialogTitle>
             <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
               <X className="h-4 w-4" />
             </Button>
           </div>
         </DialogHeader>
-
         <div className="space-y-4">
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            We've sent a 6-digit verification code to <span className="font-medium">{email}</span>
+            {t("otpVerificationModal.verificationCodeSent")} <span className="font-medium">{email}</span>
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="otp">Verification Code</Label>
+            <Label htmlFor="otp">{t("otpVerificationModal.verificationCode")}</Label>
             <Input
               id="otp"
               type="text"
-              placeholder="Enter 6-digit code"
+              placeholder={t("otpVerificationModal.enterVerificationCode")}
               value={otp}
               onChange={handleOTPChange}
               maxLength={6}
@@ -154,7 +139,6 @@ export default function OTPVerificationModal({ isOpen, onClose, email, onVerific
               autoComplete="one-time-code"
             />
           </div>
-
           <div className="flex flex-col space-y-2">
             <Button
               onClick={handleVerifyOTP}
@@ -164,13 +148,12 @@ export default function OTPVerificationModal({ isOpen, onClose, email, onVerific
               {isVerifying ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
+                  {t("otpVerificationModal.verifying")}
                 </>
               ) : (
-                "Verify OTP"
+                t("otpVerificationModal.verifyOTP")
               )}
             </Button>
-
             <Button
               variant="outline"
               onClick={handleResendOTP}
@@ -180,16 +163,15 @@ export default function OTPVerificationModal({ isOpen, onClose, email, onVerific
               {isResending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Resending...
+                  {t("otpVerificationModal.resending")}
                 </>
               ) : (
-                "Resend OTP"
+                t("otpVerificationModal.resendOTP")
               )}
             </Button>
           </div>
-
           <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-            Didn't receive the code? Check your spam folder or click resend.
+            {t("otpVerificationModal.didntReceiveCode")}
           </div>
         </div>
       </DialogContent>

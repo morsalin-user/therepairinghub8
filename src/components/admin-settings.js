@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -7,8 +6,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, Save } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useTranslation } from "@/lib/i18n"
 
 export default function AdminSettings() {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -24,22 +25,21 @@ export default function AdminSettings() {
     try {
       const response = await fetch("/api/admin/settings")
       const data = await response.json()
-
       if (data.success) {
         setSettings(data.settings)
       } else {
         console.error("Failed to fetch settings:", data.message)
         toast({
-          title: "Error",
-          description: "Failed to load settings",
+          title: t("common.error"),
+          description: t("adminSettingsPage.errorLoadingSettings"),
           variant: "destructive",
         })
       }
     } catch (error) {
       console.error("Error fetching settings:", error)
       toast({
-        title: "Error",
-        description: "Failed to load settings",
+        title: t("common.error"),
+        description: t("adminSettingsPage.errorLoadingSettings"),
         variant: "destructive",
       })
     } finally {
@@ -49,7 +49,6 @@ export default function AdminSettings() {
 
   const handleSaveSettings = async () => {
     setIsSaving(true)
-
     try {
       const response = await fetch("/api/admin/settings", {
         method: "PUT",
@@ -58,29 +57,25 @@ export default function AdminSettings() {
         },
         body: JSON.stringify(settings),
       })
-
       const data = await response.json()
-
       if (data.success) {
         toast({
-          title: "Settings saved",
-          description: "Your settings have been updated successfully",
+          title: t("adminSettingsPage.settingsSaved"),
+          description: t("adminSettingsPage.settingsSavedDescription"),
         })
-
-        // Update settings with the values from the server
         setSettings(data.settings)
       } else {
         toast({
-          title: "Error",
-          description: data.message || "Failed to save settings",
+          title: t("common.error"),
+          description: data.message || t("adminSettingsPage.errorSavingSettings"),
           variant: "destructive",
         })
       }
     } catch (error) {
       console.error("Error saving settings:", error)
       toast({
-        title: "Error",
-        description: "Failed to save settings",
+        title: t("common.error"),
+        description: t("adminSettingsPage.errorSavingSettings"),
         variant: "destructive",
       })
     } finally {
@@ -107,12 +102,12 @@ export default function AdminSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Platform Settings</CardTitle>
-        <CardDescription>Configure global platform settings</CardDescription>
+        <CardTitle>{t("adminSettingsPage.platformSettings")}</CardTitle>
+        <CardDescription>{t("adminSettingsPage.configureGlobalPlatformSettings")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="escrowPeriodMinutes">Escrow Period (minutes)</Label>
+          <Label htmlFor="escrowPeriodMinutes">{t("adminSettingsPage.escrowPeriodMinutes")}</Label>
           <div className="flex items-center space-x-2">
             <Input
               id="escrowPeriodMinutes"
@@ -127,8 +122,7 @@ export default function AdminSettings() {
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Time to hold payments in escrow before releasing to providers. Set to 1 minute for testing, increase to
-            10080 (7 days) for production.
+            {t("adminSettingsPage.escrowPeriodDescription")}
           </p>
         </div>
       </CardContent>
@@ -137,12 +131,12 @@ export default function AdminSettings() {
           {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              {t("adminSettingsPage.saving")}
             </>
           ) : (
             <>
               <Save className="mr-2 h-4 w-4" />
-              Save Settings
+              {t("adminSettingsPage.saveSettings")}
             </>
           )}
         </Button>

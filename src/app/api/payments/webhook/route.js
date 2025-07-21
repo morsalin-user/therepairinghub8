@@ -1,3 +1,4 @@
+// api/payments/webhook/route.js
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 import Stripe from "stripe"
@@ -70,8 +71,8 @@ async function handleCheckoutSessionCompleted(session) {
       return
     }
 
-    // Set escrow end date (default 1 minute from now)
-    const escrowPeriodMinutes = Number.parseInt(process.env.ESCROW_PERIOD_MINUTES || "1", 10)
+    // Set escrow end date (use environment variable or default to 10 days)
+    const escrowPeriodMinutes = Number.parseInt(process.env.ESCROW_PERIOD_MINUTES || "14400", 10) // 14400 minutes = 10 days
     const escrowEndDate = new Date(Date.now() + escrowPeriodMinutes * 60 * 1000)
 
     // Update job status
@@ -105,6 +106,7 @@ async function handleCheckoutSessionCompleted(session) {
     })
 
     console.log("Checkout session completed for transaction:", transaction._id)
+    console.log("Escrow end date set to:", escrowEndDate)
 
     // Schedule job completion after escrow period
     scheduleJobCompletion(job._id, escrowEndDate)
@@ -134,8 +136,8 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
       return
     }
 
-    // Set escrow end date (default 1 minute from now)
-    const escrowPeriodMinutes = Number.parseInt(process.env.ESCROW_PERIOD_MINUTES || "1", 10)
+    // Set escrow end date (use environment variable or default to 10 days)
+    const escrowPeriodMinutes = Number.parseInt(process.env.ESCROW_PERIOD_MINUTES || "14400", 10) // 14400 minutes = 10 days
     const escrowEndDate = new Date(Date.now() + escrowPeriodMinutes * 60 * 1000)
 
     // Update job status
@@ -160,6 +162,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
     })
 
     console.log("Payment successful for transaction:", transaction._id)
+    console.log("Escrow end date set to:", escrowEndDate)
 
     // Schedule job completion after escrow period
     scheduleJobCompletion(job._id, escrowEndDate)
@@ -225,7 +228,7 @@ async function scheduleJobCompletion(jobId, escrowEndDate) {
     await completeJob(jobId)
   }, timeUntilCompletion)
 
-  console.log(`Job ${jobId} scheduled for completion in ${timeUntilCompletion}ms`)
+  console.log(`Job ${jobId} scheduled for completion in ${timeUntilCompletion}ms (${Math.round(timeUntilCompletion / (1000 * 60 * 60 * 24))} days)`)
 }
 
 // Complete job and release payment

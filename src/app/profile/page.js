@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
@@ -13,11 +12,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Loader2, Save, UserIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/auth-context"
+import { useTranslation } from "@/lib/i18n"
 import { userAPI } from "@/lib/api"
 import FinancialDashboard from "@/components/financial-dashboard"
 import DeleteAccountModal from "@/components/delete-account-modal"
 
 export default function ProfilePage() {
+  const { t } = useTranslation()
   const { user, loading, updateUserData } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
@@ -37,9 +38,7 @@ export default function ProfilePage() {
     if (!loading && !user) {
       router.push("/login")
     }
-
     if (user) {
-      // Reset form with current user data
       const formData = {
         name: user.name || "",
         email: user.email || "",
@@ -49,10 +48,7 @@ export default function ProfilePage() {
         skills: user.skills ? user.skills.join(", ") : "",
         paypalEmail: user.paypalEmail || "",
       }
-
-      console.log("Resetting form with user data:", formData)
       reset(formData)
-
       if (user.avatar) {
         setAvatarPreview(user.avatar)
       }
@@ -73,9 +69,7 @@ export default function ProfilePage() {
 
   const onSubmit = async (data) => {
     setIsUpdating(true)
-
     try {
-      // Format skills as array
       const formattedData = {
         ...data,
         skills: data.skills
@@ -85,41 +79,30 @@ export default function ProfilePage() {
               .filter((skill) => skill)
           : [],
       }
-
-      // Handle avatar upload if changed
       if (avatarFile) {
-        // In a real app, you would upload the avatar to a storage service
-        // For this demo, we'll use the preview as the avatar
         formattedData.avatar = avatarPreview
       }
-
-      console.log("Updating profile with data:", formattedData)
-
-      // Update user profile
       const result = await userAPI.updateProfile(formattedData)
-
       if (result.success) {
         toast({
-          title: "Profile updated",
-          description: "Your profile has been updated successfully",
+          title: t("profilePage.profileUpdated"),
+          description: t("messages.success.profileUpdated"),
         })
-
-        // Update user data in context
         if (updateUserData) {
           updateUserData(result.user)
         }
       } else {
         toast({
-          title: "Update failed",
-          description: result.message || "Failed to update profile",
+          title: t("profilePage.updateFailed"),
+          description: result.message || t("messages.error.generic"),
           variant: "destructive",
         })
       }
     } catch (error) {
       console.error("Profile update error:", error)
       toast({
-        title: "Update failed",
-        description: "There was a problem updating your profile",
+        title: t("profilePage.updateFailed"),
+        description: t("messages.error.generic"),
         variant: "destructive",
       })
     } finally {
@@ -131,14 +114,13 @@ export default function ProfilePage() {
     try {
       const result = await userAPI.deleteAccount(user._id)
       if (result.success) {
-        // The auth context will handle the logout and redirect
         setShowDeleteModal(false)
       }
     } catch (error) {
       console.error("Delete account error:", error)
       toast({
-        title: "Deletion failed",
-        description: "There was a problem deleting your account",
+        title: t("profilePage.deletionFailed"),
+        description: t("messages.error.generic"),
         variant: "destructive",
       })
     }
@@ -154,22 +136,20 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">My Profile</h1>
-
+      <h1 className="text-3xl font-bold mb-6">{t("profilePage.title")}</h1>
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="mb-6">
-          <TabsTrigger value="profile">Profile Information</TabsTrigger>
-          <TabsTrigger value="account">Account Settings</TabsTrigger>
-          <TabsTrigger value="payment">Payment Settings</TabsTrigger>
-          <TabsTrigger value="finance">Financial Dashboard</TabsTrigger>
+          <TabsTrigger value="profile">{t("profilePage.profileInformation")}</TabsTrigger>
+          <TabsTrigger value="account">{t("profilePage.accountSettings")}</TabsTrigger>
+          <TabsTrigger value="payment">{t("profilePage.paymentSettings")}</TabsTrigger>
+          <TabsTrigger value="finance">{t("profilePage.financialDashboard")}</TabsTrigger>
         </TabsList>
-
         <form onSubmit={handleSubmit(onSubmit)}>
           <TabsContent value="profile">
             <Card>
               <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Update your personal information and public profile</CardDescription>
+                <CardTitle>{t("profilePage.profileInformation")}</CardTitle>
+                <CardDescription>{t("profilePage.profileDescription")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex flex-col items-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
@@ -181,67 +161,61 @@ export default function ProfilePage() {
                   </Avatar>
                   <div>
                     <Label htmlFor="avatar" className="block mb-2">
-                      Profile Picture
+                      {t("profilePage.profilePicture")}
                     </Label>
                     <Input id="avatar" type="file" accept="image/*" onChange={handleAvatarChange} />
-                    <p className="text-sm text-muted-foreground mt-1">Recommended: Square image, at least 200x200px</p>
+                    <p className="text-sm text-muted-foreground mt-1">{t("profilePage.profilePictureRecommendation")}</p>
                   </div>
                 </div>
-
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">{t("profilePage.fullName")}</Label>
                     <Input
                       id="name"
-                      {...register("name", { required: "Name is required" })}
-                      placeholder="Your full name"
+                      {...register("name", { required: t("messages.validation.required") })}
+                      placeholder={t("profilePage.fullNamePlaceholder")}
                     />
                     {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
+                    <Label htmlFor="email">{t("profilePage.emailAddress")}</Label>
                     <Input
                       id="email"
                       type="email"
                       {...register("email", {
-                        required: "Email is required",
+                        required: t("messages.validation.required"),
                         pattern: {
                           value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: "Invalid email address",
+                          message: t("messages.validation.emailInvalid"),
                         },
                       })}
-                      placeholder="Your email address"
+                      placeholder={t("profilePage.emailPlaceholder")}
                       disabled
                     />
                     {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" {...register("phone")} placeholder="Your phone number (optional)" />
+                    <Label htmlFor="phone">{t("profilePage.phoneNumber")}</Label>
+                    <Input id="phone" {...register("phone")} placeholder={t("profilePage.phonePlaceholder")} />
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Input id="address" {...register("address")} placeholder="Your address (optional)" />
+                    <Label htmlFor="address">{t("profilePage.address")}</Label>
+                    <Input id="address" {...register("address")} placeholder={t("profilePage.addressPlaceholder")} />
                   </div>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
+                  <Label htmlFor="bio">{t("profilePage.bio")}</Label>
                   <Textarea
                     id="bio"
                     {...register("bio")}
-                    placeholder="Tell us about yourself"
+                    placeholder={t("profilePage.bioPlaceholder")}
                     className="min-h-[100px]"
                   />
                 </div>
-
                 {user?.userType === "Seller" && (
                   <div className="space-y-2">
-                    <Label htmlFor="skills">Skills (comma separated)</Label>
-                    <Input id="skills" {...register("skills")} placeholder="e.g. Plumbing, Electrical, Carpentry" />
+                    <Label htmlFor="skills">{t("profilePage.skills")}</Label>
+                    <Input id="skills" {...register("skills")} placeholder={t("profilePage.skillsPlaceholder")} />
                   </div>
                 )}
               </CardContent>
@@ -250,76 +224,71 @@ export default function ProfilePage() {
                   {isUpdating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
+                      {t("profilePage.saving")}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      Save Changes
+                      {t("profilePage.saveChanges")}
                     </>
                   )}
                 </Button>
               </CardFooter>
             </Card>
           </TabsContent>
-
           <TabsContent value="account">
             <Card>
               <CardHeader>
-                <CardTitle>Account Settings</CardTitle>
-                <CardDescription>Manage your account preferences and security</CardDescription>
+                <CardTitle>{t("profilePage.accountSettings")}</CardTitle>
+                <CardDescription>{t("profilePage.accountDescription")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="current-password">Current Password</Label>
+                  <Label htmlFor="current-password">{t("profilePage.currentPassword")}</Label>
                   <Input
                     id="current-password"
                     type="password"
                     {...register("currentPassword")}
-                    placeholder="Enter your current password"
+                    placeholder={t("profilePage.currentPasswordPlaceholder")}
                   />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
+                  <Label htmlFor="new-password">{t("profilePage.newPassword")}</Label>
                   <Input
                     id="new-password"
                     type="password"
                     {...register("newPassword", {
                       minLength: {
                         value: 6,
-                        message: "Password must be at least 6 characters",
+                        message: t("messages.validation.passwordTooShort"),
                       },
                     })}
-                    placeholder="Enter a new password"
+                    placeholder={t("profilePage.newPasswordPlaceholder")}
                   />
                   {errors.newPassword && <p className="text-sm text-red-500">{errors.newPassword.message}</p>}
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm New Password</Label>
+                  <Label htmlFor="confirm-password">{t("profilePage.confirmNewPassword")}</Label>
                   <Input
                     id="confirm-password"
                     type="password"
                     {...register("confirmPassword", {
-                      validate: (value, { newPassword }) => {
-                        if (newPassword && value !== newPassword) {
-                          return "Passwords do not match"
+                      validate: (value, formValues) => {
+                        if (formValues.newPassword && value !== formValues.newPassword) {
+                          return t("messages.validation.passwordsNotMatch")
                         }
                       },
                     })}
-                    placeholder="Confirm your new password"
+                    placeholder={t("profilePage.confirmNewPasswordPlaceholder")}
                   />
                   {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>}
                 </div>
-
-                {/* Danger Zone */}
                 <div className="border-t pt-6">
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-lg font-medium text-red-600">Danger Zone</h3>
+                      <h3 className="text-lg font-medium text-red-600">{t("profilePage.dangerZone")}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Once you delete your account, there is no going back. Please be certain.
+                        {t("profilePage.dangerZoneDescription")}
                       </p>
                     </div>
                     <Button
@@ -328,7 +297,7 @@ export default function ProfilePage() {
                       onClick={() => setShowDeleteModal(true)}
                       className="w-full sm:w-auto"
                     >
-                      Delete My Account
+                      {t("profilePage.deleteMyAccount")}
                     </Button>
                   </div>
                 </div>
@@ -338,42 +307,41 @@ export default function ProfilePage() {
                   {isUpdating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
+                      {t("profilePage.saving")}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      Save Changes
+                      {t("profilePage.saveChanges")}
                     </>
                   )}
                 </Button>
               </CardFooter>
             </Card>
           </TabsContent>
-
           <TabsContent value="payment">
             <Card>
               <CardHeader>
-                <CardTitle>Payment Settings</CardTitle>
-                <CardDescription>Manage your payment preferences and withdrawal methods</CardDescription>
+                <CardTitle>{t("profilePage.paymentSettings")}</CardTitle>
+                <CardDescription>{t("profilePage.paymentDescription")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="paypal-email">PayPal Email</Label>
+                  <Label htmlFor="paypal-email">{t("profilePage.paypalEmail")}</Label>
                   <Input
                     id="paypal-email"
                     type="email"
                     {...register("paypalEmail", {
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: "Invalid email address",
+                        message: t("messages.validation.emailInvalid"),
                       },
                     })}
-                    placeholder="Your PayPal email address"
+                    placeholder={t("profilePage.paypalEmailPlaceholder")}
                   />
                   {errors.paypalEmail && <p className="text-sm text-red-500">{errors.paypalEmail.message}</p>}
                   <p className="text-sm text-muted-foreground mt-1">
-                    This email will be used for PayPal withdrawals and payments
+                    {t("profilePage.paypalEmailDescription")}
                   </p>
                 </div>
               </CardContent>
@@ -382,12 +350,12 @@ export default function ProfilePage() {
                   {isUpdating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
+                      {t("profilePage.saving")}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      Save Changes
+                      {t("profilePage.saveChanges")}
                     </>
                   )}
                 </Button>
@@ -395,7 +363,6 @@ export default function ProfilePage() {
             </Card>
           </TabsContent>
         </form>
-
         <TabsContent value="finance">
           <FinancialDashboard />
         </TabsContent>

@@ -1,5 +1,4 @@
 "use client"
-
 import Link from "next/link"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,43 +7,43 @@ import { MapPin, Calendar, DollarSign } from "lucide-react"
 import { jobAPI } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
+import { useTranslation } from "@/lib/i18n"
 
 export default function JobCard({ job, userType }) {
+  const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
   const getStatusBadge = (status) => {
     switch (status) {
       case "active":
-        return <Badge className="bg-green-500">Active</Badge>
+        return <Badge className="bg-green-500">{t("jobCard.active")}</Badge>
       case "completed":
-        return <Badge className="bg-blue-500">Completed</Badge>
+        return <Badge className="bg-blue-500">{t("jobCard.completed")}</Badge>
       case "in_progress":
-        return <Badge className="bg-yellow-500">In Progress</Badge>
+        return <Badge className="bg-yellow-500">{t("jobCard.inProgress")}</Badge>
       default:
         return <Badge>{status}</Badge>
     }
   }
 
   const handleCancelJob = async () => {
-    if (!confirm("Are you sure you want to cancel this job?")) return
-
+    if (!confirm(t("jobCard.areYouSureCancelJob"))) return
     setIsLoading(true)
     try {
       const { success } = await jobAPI.updateJob(job._id, { status: "cancelled" })
       if (success) {
         toast({
-          title: "Job cancelled",
-          description: "The job has been cancelled successfully.",
+          title: t("jobCard.jobCancelled"),
+          description: t("jobCard.jobCancelledDescription"),
         })
-        // Refresh the page to show updated status
         window.location.reload()
       }
     } catch (error) {
       console.error("Cancel job error:", error)
       toast({
-        title: "Cancellation failed",
-        description: error.response?.data?.message || "There was a problem cancelling the job.",
+        title: t("jobCard.cancellationFailed"),
+        description: error.response?.data?.message || t("jobCard.cancellationFailedDescription"),
         variant: "destructive",
       })
     } finally {
@@ -53,24 +52,22 @@ export default function JobCard({ job, userType }) {
   }
 
   const handleMarkComplete = async () => {
-    if (!confirm("Are you sure you want to mark this job as completed?")) return
-
+    if (!confirm(t("jobCard.areYouSureMarkComplete"))) return
     setIsLoading(true)
     try {
       const { success } = await jobAPI.updateJob(job._id, { status: "completed" })
       if (success) {
         toast({
-          title: "Job completed",
-          description: "The job has been marked as completed successfully.",
+          title: t("jobCard.jobCompleted"),
+          description: t("jobCard.jobCompletedDescription"),
         })
-        // Refresh the page to show updated status
         window.location.reload()
       }
     } catch (error) {
       console.error("Mark complete error:", error)
       toast({
-        title: "Action failed",
-        description: error.response?.data?.message || "There was a problem marking the job as completed.",
+        title: t("jobCard.actionFailed"),
+        description: error.response?.data?.message || t("jobCard.actionFailedDescription"),
         variant: "destructive",
       })
     } finally {
@@ -103,7 +100,7 @@ export default function JobCard({ job, userType }) {
       </CardContent>
       <CardFooter className="border-t pt-4 flex justify-between">
         <Link href={`/jobs/${job._id}`}>
-          <Button variant="outline">View Details</Button>
+          <Button variant="outline">{t("jobCard.viewDetails")}</Button>
         </Link>
         {userType === "Buyer" && job.status === "active" && (
           <Button
@@ -112,17 +109,17 @@ export default function JobCard({ job, userType }) {
             onClick={handleCancelJob}
             disabled={isLoading}
           >
-            Cancel
+            {t("jobCard.cancel")}
           </Button>
         )}
         {userType === "Seller" && job.status === "active" && (
           <Link href={`/jobs/${job._id}`}>
-            <Button>Send Quote</Button>
+            <Button>{t("jobCard.sendQuote")}</Button>
           </Link>
         )}
         {userType === "Buyer" && job.status === "in_progress" && (
           <Button onClick={handleMarkComplete} disabled={isLoading}>
-            Mark Complete
+            {t("jobCard.markComplete")}
           </Button>
         )}
       </CardFooter>

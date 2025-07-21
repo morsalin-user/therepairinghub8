@@ -1,16 +1,16 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Clock } from "lucide-react"
+import { useTranslation } from "@/lib/i18n"
 
 export default function CountdownTimer({ endDate, onComplete }) {
+  const { t } = useTranslation()
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft())
   const [isComplete, setIsComplete] = useState(false)
 
   function calculateTimeLeft() {
     const difference = new Date(endDate) - new Date()
-
     if (difference <= 0) {
       return {
         days: 0,
@@ -20,7 +20,6 @@ export default function CountdownTimer({ endDate, onComplete }) {
         total: 0,
       }
     }
-
     return {
       days: Math.floor(difference / (1000 * 60 * 60 * 24)),
       hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
@@ -32,17 +31,14 @@ export default function CountdownTimer({ endDate, onComplete }) {
 
   useEffect(() => {
     if (isComplete) return
-
     const timer = setTimeout(() => {
       const newTimeLeft = calculateTimeLeft()
       setTimeLeft(newTimeLeft)
-
       if (newTimeLeft.total <= 0 && !isComplete) {
         setIsComplete(true)
         if (onComplete) onComplete()
       }
     }, 1000)
-
     return () => clearTimeout(timer)
   }, [timeLeft, isComplete, onComplete, endDate])
 
@@ -57,7 +53,7 @@ export default function CountdownTimer({ endDate, onComplete }) {
   }
 
   if (isComplete) {
-    return <div className="text-sm text-gray-500">Time expired</div>
+    return <div className="text-sm text-gray-500">{t("countdownTimer.timeExpired")}</div>
   }
 
   return (
@@ -68,8 +64,10 @@ export default function CountdownTimer({ endDate, onComplete }) {
           <span>{formatTime()}</span>
         </TooltipTrigger>
         <TooltipContent>
-          <p>The job will be marked as complete automatically after this time ends</p>
-          <p className="text-xs mt-1">Auto-completion: {new Date(endDate).toLocaleString()}</p>
+          <p>{t("countdownTimer.autoCompletionTooltip")}</p>
+          <p className="text-xs mt-1">
+            {t("countdownTimer.autoCompletionDate", { date: new Date(endDate).toLocaleString() })}
+          </p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

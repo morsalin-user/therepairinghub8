@@ -1,5 +1,4 @@
 "use client"
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,8 +14,10 @@ import { useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { userAPI } from "@/lib/api"
 import { useToast } from "@/components/ui/use-toast"
+import { useTranslation } from "@/lib/i18n"
 
 export default function DeleteAccountModal({ isOpen, setIsOpen }) {
+  const { t } = useTranslation()
   const { user, setUser, logout } = useAuth()
   const [emailConfirmation, setEmailConfirmation] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
@@ -25,34 +26,27 @@ export default function DeleteAccountModal({ isOpen, setIsOpen }) {
   const handleDeleteAccount = async () => {
     if (emailConfirmation !== user.email) {
       toast({
-        title: "Email mismatch",
-        description: "Please enter your email address correctly to confirm deletion.",
+        title: t("deleteAccountModal.emailMismatch"),
+        description: t("deleteAccountModal.emailMismatchDescription"),
         variant: "destructive",
       })
       return
     }
-
     setIsDeleting(true)
-
     try {
-        const success = await userAPI.deleteAccount(user._id)
+      const success = await userAPI.deleteAccount(user._id)
       if (success) {
-        // Close modal immediately
         setIsOpen(false)
-
-        // Show success message
         toast({
-          title: "Account deleted",
-          description: "Your account has been permanently deleted. Redirecting to login...",
+          title: t("deleteAccountModal.accountDeleted"),
+          description: t("deleteAccountModal.accountDeletedDescription"),
         })
-
-        // The auth context will handle the redirect
       }
     } catch (error) {
       console.error("Delete account error:", error)
       toast({
-        title: "Deletion failed",
-        description: "There was a problem deleting your account. Please try again.",
+        title: t("deleteAccountModal.deletionFailed"),
+        description: t("deleteAccountModal.deletionFailedDescription"),
         variant: "destructive",
       })
     } finally {
@@ -64,26 +58,25 @@ export default function DeleteAccountModal({ isOpen, setIsOpen }) {
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogTitle>{t("deleteAccountModal.areYouSure")}</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete your account and remove your data from our
-            servers.
+            {t("deleteAccountModal.confirmationDescription")}
             <br />
             <br />
-            Please enter your email address to confirm.
+            {t("deleteAccountModal.enterEmailToConfirm")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <Input
           type="email"
-          placeholder="Email Address"
+          placeholder={t("deleteAccountModal.emailPlaceholder")}
           value={emailConfirmation}
           onChange={(e) => setEmailConfirmation(e.target.value)}
           disabled={isDeleting}
         />
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>{t("deleteAccountModal.cancel")}</AlertDialogCancel>
           <AlertDialogAction disabled={isDeleting} onClick={handleDeleteAccount}>
-            {isDeleting ? "Deleting..." : "Delete"}
+            {isDeleting ? t("deleteAccountModal.deleting") : t("deleteAccountModal.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

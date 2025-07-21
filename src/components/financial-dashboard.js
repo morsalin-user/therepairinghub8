@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -10,8 +9,10 @@ import { Loader2, DollarSign, CreditCard, TrendingUp, ArrowDownToLine, Wallet } 
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { paymentAPI } from "@/lib/api"
+import { useTranslation } from "@/lib/i18n"
 
 export default function FinancialDashboard() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
@@ -29,19 +30,13 @@ export default function FinancialDashboard() {
 
   useEffect(() => {
     fetchFinancialData()
-
-    // Pre-fill PayPal email if available
     if (user?.paypalEmail) {
       setWithdrawPaypalEmail(user.paypalEmail)
     }
-
-    // Set up polling for real-time updates
-    const interval = setInterval(fetchFinancialData, 30000) // Update every 30 seconds
-
+    const interval = setInterval(fetchFinancialData, 30000)
     return () => clearInterval(interval)
   }, [user])
 
-  // Update PayPal email when user data changes
   useEffect(() => {
     if (user?.paypalEmail && !withdrawPaypalEmail) {
       setWithdrawPaypalEmail(user.paypalEmail)
@@ -57,23 +52,19 @@ export default function FinancialDashboard() {
         },
       })
       const data = await response.json()
-
       if (data.success) {
-        console.log("Financial data received:", data.financialData)
         setFinancialData(data.financialData)
       } else {
-        console.error("Failed to fetch financial data:", data.message)
         toast({
-          title: "Error",
-          description: data.message || "Failed to load financial data",
+          title: t("common.error"),
+          description: data.message || t("financialDashboard.errorLoadingFinancialData"),
           variant: "destructive",
         })
       }
     } catch (error) {
-      console.error("Error fetching financial data:", error)
       toast({
-        title: "Error",
-        description: "Failed to load financial data",
+        title: t("common.error"),
+        description: t("financialDashboard.errorLoadingFinancialData"),
         variant: "destructive",
       })
     } finally {
@@ -84,39 +75,31 @@ export default function FinancialDashboard() {
   const handleWithdraw = async () => {
     if (!withdrawAmount || isNaN(withdrawAmount) || Number.parseFloat(withdrawAmount) <= 0) {
       toast({
-        title: "Invalid amount",
-        description: "Please enter a valid withdrawal amount",
+        title: t("financialDashboard.invalidAmount"),
+        description: t("financialDashboard.enterValidWithdrawalAmount"),
         variant: "destructive",
       })
       return
     }
-
     if (!withdrawPaypalEmail || !withdrawPaypalEmail.includes("@")) {
       toast({
-        title: "PayPal email required",
-        description: "Please enter a valid PayPal email address",
+        title: t("financialDashboard.payPalEmailRequired"),
+        description: t("financialDashboard.enterValidPayPalEmailAddress"),
         variant: "destructive",
       })
       return
     }
-
     const amount = Number.parseFloat(withdrawAmount)
-
     if (amount > financialData.availableBalance) {
       toast({
-        title: "Insufficient funds",
-        description: `You don't have enough funds to withdraw this amount. Available balance: $${financialData.availableBalance.toFixed(2)}`,
+        title: t("financialDashboard.insufficientFunds"),
+        description: `${t("financialDashboard.notEnoughFunds")} $${financialData.availableBalance.toFixed(2)}`,
         variant: "destructive",
       })
       return
     }
-
     setIsWithdrawing(true)
-
     try {
-      console.log(`Attempting to withdraw ${amount} to PayPal email: ${withdrawPaypalEmail}`)
-
-      // If PayPal email is different from user's saved email, update it first
       if (withdrawPaypalEmail !== user?.paypalEmail) {
         await fetch(`/api/users/${user._id}`, {
           method: "PUT",
@@ -127,37 +110,29 @@ export default function FinancialDashboard() {
           body: JSON.stringify({ paypalEmail: withdrawPaypalEmail }),
         })
       }
-
       const result = await paymentAPI.processWithdrawal(amount)
-
       if (result.success) {
         toast({
-          title: "Withdrawal initiated",
-          description: result.message || `$${amount} is being sent to your PayPal account.`,
+          title: t("financialDashboard.withdrawalInitiated"),
+          description: result.message || `${t("financialDashboard.amountSentToPayPal")} $${amount}.`,
         })
-
-        // Update financial data
         setFinancialData((prev) => ({
           ...prev,
           availableBalance: result.newBalance || prev.availableBalance - amount,
         }))
-
         setWithdrawAmount("")
-
-        // Refresh financial data
         fetchFinancialData()
       } else {
         toast({
-          title: "Withdrawal failed",
-          description: result.message || "There was a problem processing your withdrawal",
+          title: t("financialDashboard.withdrawalFailed"),
+          description: result.message || t("financialDashboard.withdrawalProcessingProblem"),
           variant: "destructive",
         })
       }
     } catch (error) {
-      console.error("Withdrawal error:", error)
       toast({
-        title: "Withdrawal failed",
-        description: "There was a problem processing your withdrawal",
+        title: t("financialDashboard.withdrawalFailed"),
+        description: t("financialDashboard.withdrawalProcessingProblem"),
         variant: "destructive",
       })
     } finally {
@@ -173,60 +148,53 @@ export default function FinancialDashboard() {
     )
   }
 
-  // Show different data based on user type
   const isSeller = user?.userType === "Seller"
   const isBuyer = user?.userType === "Buyer"
 
   return (
     <div className="space-y-6">
-      {/* Financial Overview Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {/* Available Balance - Show for Sellers only */}
         {isSeller && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Available Balance</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("financialDashboard.availableBalance")}</CardTitle>
               <Wallet className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${financialData.availableBalance.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Available for withdrawal</p>
+              <p className="text-xs text-muted-foreground">{t("financialDashboard.availableForWithdrawal")}</p>
             </CardContent>
           </Card>
         )}
-
-        {/* Total Earnings - Show for Sellers */}
         {isSeller && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("financialDashboard.totalEarnings")}</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${financialData.totalEarnings.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">From completed jobs</p>
+              <p className="text-xs text-muted-foreground">{t("financialDashboard.fromCompletedJobs")}</p>
             </CardContent>
           </Card>
         )}
-
-        {/* Total Spending - Show for Buyers */}
         {isBuyer && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Spending</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("financialDashboard.totalSpending")}</CardTitle>
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${financialData.totalSpending.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">On services</p>
+              <p className="text-xs text-muted-foreground">{t("financialDashboard.onServices")}</p>
             </CardContent>
           </Card>
         )}
-
-        {/* Net Balance - Show appropriate data for each user type */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{isSeller ? "Net Earnings" : "Total Spending"}</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {isSeller ? t("financialDashboard.netEarnings") : t("financialDashboard.totalAmountSpent")}
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -236,27 +204,25 @@ export default function FinancialDashboard() {
                 : `$${financialData.totalSpending.toFixed(2)}`}
             </div>
             <p className="text-xs text-muted-foreground">
-              {isSeller ? "Earnings minus expenses" : "Total amount spent"}
+              {isSeller ? t("financialDashboard.earningsMinusExpenses") : t("financialDashboard.totalAmountSpent")}
             </p>
           </CardContent>
         </Card>
       </div>
-
-      {/* Withdrawal Section - Show for Sellers only */}
       {isSeller && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-medium">Withdraw Earnings</CardTitle>
-            <CardDescription>Withdraw your earnings to your PayPal account</CardDescription>
+            <CardTitle className="text-lg font-medium">{t("financialDashboard.withdrawEarnings")}</CardTitle>
+            <CardDescription>{t("financialDashboard.withdrawYourEarnings")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="withdrawAmount">Withdrawal Amount</Label>
+                  <Label htmlFor="withdrawAmount">{t("financialDashboard.withdrawalAmount")}</Label>
                   <Input
                     id="withdrawAmount"
-                    placeholder="Enter amount to withdraw"
+                    placeholder={t("financialDashboard.enterAmountToWithdraw")}
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
                     type="number"
@@ -266,11 +232,11 @@ export default function FinancialDashboard() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="withdrawPaypalEmail">PayPal Email</Label>
+                  <Label htmlFor="withdrawPaypalEmail">{t("financialDashboard.payPalEmail")}</Label>
                   <Input
                     id="withdrawPaypalEmail"
                     type="email"
-                    placeholder="Enter PayPal email"
+                    placeholder={t("financialDashboard.enterPayPalEmail")}
                     value={withdrawPaypalEmail}
                     onChange={(e) => setWithdrawPaypalEmail(e.target.value)}
                   />
@@ -285,23 +251,23 @@ export default function FinancialDashboard() {
                   {isWithdrawing ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
+                      {t("financialDashboard.processing")}
                     </>
                   ) : (
                     <>
                       <ArrowDownToLine className="mr-2 h-4 w-4" />
-                      Withdraw
+                      {t("financialDashboard.withdraw")}
                     </>
                   )}
                 </Button>
               </div>
               <div className="text-sm text-muted-foreground">
                 <p>
-                  <span className="font-medium">Available Balance:</span> ${financialData.availableBalance.toFixed(2)}
+                  <span className="font-medium">{t("financialDashboard.availableBalance")}:</span> ${financialData.availableBalance.toFixed(2)}
                 </p>
                 {user?.paypalEmail && (
                   <p>
-                    <span className="font-medium">Saved PayPal Email:</span> {user.paypalEmail}
+                    <span className="font-medium">{t("financialDashboard.savedPayPalEmail")}:</span> {user.paypalEmail}
                   </p>
                 )}
               </div>
@@ -309,29 +275,27 @@ export default function FinancialDashboard() {
           </CardContent>
         </Card>
       )}
-
-      {/* Tabs for detailed financial data */}
       <Tabs defaultValue="transactions" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="transactions">Recent Transactions</TabsTrigger>
-          <TabsTrigger value="analysis">{isSeller ? "Earnings Analysis" : "Spending Analysis"}</TabsTrigger>
+          <TabsTrigger value="transactions">{t("financialDashboard.recentTransactions")}</TabsTrigger>
+          <TabsTrigger value="analysis">
+            {isSeller ? t("financialDashboard.earningsAnalysis") : t("financialDashboard.spendingAnalysis")}
+          </TabsTrigger>
         </TabsList>
-
-        {/* Recent Transactions Tab */}
         <TabsContent value="transactions" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Transactions</CardTitle>
-              <CardDescription>Your recent payment activity and transaction history</CardDescription>
+              <CardTitle>{t("financialDashboard.recentTransactions")}</CardTitle>
+              <CardDescription>{t("financialDashboard.yourRecentPaymentActivity")}</CardDescription>
             </CardHeader>
             <CardContent>
               {financialData.recentTransactions.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">No transactions found</p>
+                  <p className="text-muted-foreground">{t("financialDashboard.noTransactionsFound")}</p>
                   <p className="text-sm text-muted-foreground mt-2">
                     {isBuyer
-                      ? "Start by hiring a service provider to see your transactions here."
-                      : "Complete some jobs to see your earnings here."}
+                      ? t("financialDashboard.startByHiring")
+                      : t("financialDashboard.completeSomeJobs")}
                   </p>
                 </div>
               ) : (
@@ -377,26 +341,26 @@ export default function FinancialDashboard() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* Analysis Tab */}
         <TabsContent value="analysis" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{isSeller ? "Earnings Analysis" : "Spending Analysis"}</CardTitle>
+              <CardTitle>{isSeller ? t("financialDashboard.earningsAnalysis") : t("financialDashboard.spendingAnalysis")}</CardTitle>
               <CardDescription>
                 {isSeller
-                  ? "Your earnings breakdown and trends over time"
-                  : "How your spending is distributed across different service categories"}
+                  ? t("financialDashboard.yourEarningsBreakdown")
+                  : t("financialDashboard.howYourSpendingIsDistributed")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {(isSeller ? financialData.earningsTrend : financialData.spendingByCategory).length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">No {isSeller ? "earnings" : "spending"} data available</p>
+                  <p className="text-muted-foreground">
+                    {isSeller ? t("financialDashboard.noEarningsDataAvailable") : t("financialDashboard.noSpendingDataAvailable")}
+                  </p>
                   <p className="text-sm text-muted-foreground mt-2">
                     {isSeller
-                      ? "Complete some jobs to see your earnings analysis."
-                      : "Start hiring services to see your spending breakdown."}
+                      ? t("financialDashboard.completeSomeJobsToSeeEarnings")
+                      : t("financialDashboard.startHiringServices")}
                   </p>
                 </div>
               ) : (
@@ -425,12 +389,12 @@ export default function FinancialDashboard() {
                           {isSeller
                             ? index > 0 && financialData.earningsTrend[index - 1]
                               ? item.amount > financialData.earningsTrend[index - 1].amount
-                                ? "↗ Increased from last month"
+                                ? t("financialDashboard.increasedFromLastMonth")
                                 : item.amount < financialData.earningsTrend[index - 1].amount
-                                  ? "↘ Decreased from last month"
-                                  : "→ Same as last month"
-                              : "First month"
-                            : `${((item.amount / getTotalAmount(financialData.spendingByCategory)) * 100).toFixed(1)}% of total spending`}
+                                  ? t("financialDashboard.decreasedFromLastMonth")
+                                  : t("financialDashboard.sameAsLastMonth")
+                              : t("financialDashboard.firstMonth")
+                            : `${((item.amount / getTotalAmount(financialData.spendingByCategory)) * 100).toFixed(1)}% ${t("financialDashboard.ofTotalSpending")}`}
                         </p>
                       </div>
                     </div>
@@ -445,7 +409,6 @@ export default function FinancialDashboard() {
   )
 }
 
-// Helper functions for charts
 function getColorForIndex(index) {
   const colors = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D", "#FF6B6B", "#4ECDC4"]
   return colors[index % colors.length]
@@ -456,5 +419,5 @@ function getTotalAmount(data) {
 }
 
 function getMaxAmount(data) {
-  return Math.max(...data.map((item) => item.amount), 0.01) // Avoid division by zero
+  return Math.max(...data.map((item) => item.amount), 0.01)
 }

@@ -1,9 +1,13 @@
+"use client"
 import Link from "next/link"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Calendar, DollarSign } from "lucide-react"
+import { useTranslation } from "@/lib/i18n"
 
 export default function JobListingPreview({ id, title, price, location, date, category }) {
+  const { t } = useTranslation()
+
   return (
     <Link href={`/jobs/${id}`}>
       <Card className="h-full hover:shadow-md transition-shadow">
@@ -26,7 +30,7 @@ export default function JobListingPreview({ id, title, price, location, date, ca
           </div>
         </CardContent>
         <CardFooter className="border-t pt-4 text-sm">
-          <span className="text-blue-600 dark:text-blue-400">View details →</span>
+          <span className="text-blue-600 dark:text-blue-400">{t("jobListingPreview.viewDetails")}</span>
         </CardFooter>
       </Card>
     </Link>

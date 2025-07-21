@@ -1,8 +1,11 @@
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { formatDistanceToNow } from "date-fns"
+import { useTranslation } from "@/lib/i18n"
 
 export default function JobStatusBadge({ status, escrowEndDate }) {
+  const { t } = useTranslation()
+
   const getStatusColor = (status) => {
     switch (status) {
       case "active":
@@ -23,15 +26,15 @@ export default function JobStatusBadge({ status, escrowEndDate }) {
   const getStatusText = (status) => {
     switch (status) {
       case "active":
-        return "Open"
+        return t("jobStatusBadge.open")
       case "in_progress":
-        return "In Progress"
+        return t("jobStatusBadge.inProgress")
       case "completed":
-        return "Completed"
+        return t("jobStatusBadge.completed")
       case "cancelled":
-        return "Cancelled"
+        return t("jobStatusBadge.cancelled")
       case "pending_payment":
-        return "Pending Payment"
+        return t("jobStatusBadge.pendingPayment")
       default:
         return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ")
     }
@@ -52,8 +55,8 @@ export default function JobStatusBadge({ status, escrowEndDate }) {
               <Badge className={badgeClass}>{statusText}</Badge>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Auto-completes {timeRemaining}</p>
-              <p className="text-xs mt-1">({endDate.toLocaleString()})</p>
+              <p>{t("jobStatusBadge.autoCompletes", { timeRemaining })}</p>
+              <p className="text-xs mt-1">{t("jobStatusBadge.autoCompletionDate", { date: endDate.toLocaleString() })}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

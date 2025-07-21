@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,8 +10,10 @@ import { Loader2, Star, MapPin, Phone, Mail, Calendar, MessageSquare } from "luc
 import { useToast } from "@/hooks/use-toast"
 import { userAPI, reviewAPI } from "@/lib/api"
 import JobListingPreview from "@/components/job-listing-preview"
+import { useTranslation } from "@/lib/i18n"
 
 export default function ProviderProfile({ params }) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [provider, setProvider] = useState(null)
@@ -26,21 +27,13 @@ export default function ProviderProfile({ params }) {
   const fetchProviderData = async () => {
     try {
       setIsLoading(true)
-
-      // Fetch provider profile
       const { success, user } = await userAPI.getProfile(params.id)
-
       if (success) {
         setProvider(user)
-
-        // Fetch provider reviews
         const reviewsResponse = await reviewAPI.getReviews({ provider: params.id })
         if (reviewsResponse.success) {
           setReviews(reviewsResponse.reviews)
         }
-
-        // Fetch completed jobs
-        // This would be a separate API call in a real implementation
         setCompletedJobs([
           {
             _id: "1",
@@ -71,8 +64,8 @@ export default function ProviderProfile({ params }) {
     } catch (error) {
       console.error("Error fetching provider data:", error)
       toast({
-        title: "Error",
-        description: "Failed to load provider profile. Please try again.",
+        title: t("common.error"),
+        description: t("providerProfilePage.errorLoadingProviderProfile"),
         variant: "destructive",
       })
     } finally {
@@ -92,12 +85,12 @@ export default function ProviderProfile({ params }) {
     return (
       <div className="container py-10">
         <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <h3 className="text-xl font-medium mb-2">Provider not found</h3>
+          <h3 className="text-xl font-medium mb-2">{t("providerProfilePage.providerNotFound")}</h3>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
-            The service provider you're looking for doesn't exist or has been removed.
+            {t("providerProfilePage.providerNotFoundDescription")}
           </p>
           <Button asChild>
-            <Link href="/services">Browse Service Providers</Link>
+            <Link href="/services">{t("providerProfilePage.browseServiceProviders")}</Link>
           </Button>
         </div>
       </div>
@@ -130,7 +123,7 @@ export default function ProviderProfile({ params }) {
                   <Star className="h-4 w-4 fill-current" />
                   <Star className="h-4 w-4 fill-current" />
                   <Star className="h-4 w-4 fill-current" />
-                  <span className="ml-1 text-sm">5.0 ({reviews.length} reviews)</span>
+                  <span className="ml-1 text-sm">5.0 ({reviews.length} {t("providerProfilePage.reviews")})</span>
                 </div>
                 {provider.location && (
                   <div className="flex items-center text-gray-500 mt-2">
@@ -140,13 +133,12 @@ export default function ProviderProfile({ params }) {
                 )}
                 <div className="flex items-center text-gray-500 mt-1">
                   <Calendar className="h-4 w-4 mr-1" />
-                  <span>Member since {new Date(provider.createdAt).toLocaleDateString()}</span>
+                  <span>{t("providerProfilePage.memberSince")} {new Date(provider.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
-
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Services Offered</h3>
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">{t("providerProfilePage.servicesOffered")}</h3>
                   <div className="flex flex-wrap gap-1">
                     {provider.services
                       ? provider.services.split(",").map((service, index) => (
@@ -154,12 +146,11 @@ export default function ProviderProfile({ params }) {
                             {service.trim()}
                           </Badge>
                         ))
-                      : "No services listed"}
+                      : t("providerProfilePage.noServicesListed")}
                   </div>
                 </div>
-
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Contact</h3>
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">{t("providerProfilePage.contact")}</h3>
                   <div className="space-y-2">
                     <div className="flex items-center">
                       <Mail className="h-4 w-4 mr-2 text-gray-400" />
@@ -173,35 +164,31 @@ export default function ProviderProfile({ params }) {
                     )}
                   </div>
                 </div>
-
                 <Button className="w-full">
                   <MessageSquare className="h-4 w-4 mr-2" />
-                  Contact Provider
+                  {t("providerProfilePage.contactProvider")}
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
-
         {/* Main Content */}
         <div className="md:col-span-2">
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>About Me</CardTitle>
+              <CardTitle>{t("providerProfilePage.aboutMe")}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 dark:text-gray-300">
-                {provider.bio || "This provider has not added a bio yet."}
+                {provider.bio || t("providerProfilePage.noBio")}
               </p>
             </CardContent>
           </Card>
-
           <Tabs defaultValue="completed_jobs">
             <TabsList className="mb-4">
-              <TabsTrigger value="completed_jobs">Completed Jobs</TabsTrigger>
-              <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
+              <TabsTrigger value="completed_jobs">{t("providerProfilePage.completedJobs")}</TabsTrigger>
+              <TabsTrigger value="reviews">{t("providerProfilePage.reviews")} ({reviews.length})</TabsTrigger>
             </TabsList>
-
             <TabsContent value="completed_jobs">
               <div className="grid md:grid-cols-2 gap-4">
                 {completedJobs.length > 0 ? (
@@ -218,12 +205,11 @@ export default function ProviderProfile({ params }) {
                   ))
                 ) : (
                   <div className="col-span-2 text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <p className="text-gray-500 dark:text-gray-400">This provider has not completed any jobs yet.</p>
+                    <p className="text-gray-500 dark:text-gray-400">{t("providerProfilePage.noCompletedJobs")}</p>
                   </div>
                 )}
               </div>
             </TabsContent>
-
             <TabsContent value="reviews">
               {reviews.length > 0 ? (
                 <div className="space-y-4">
@@ -279,7 +265,7 @@ export default function ProviderProfile({ params }) {
                 </div>
               ) : (
                 <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <p className="text-gray-500 dark:text-gray-400">This provider has not received any reviews yet.</p>
+                  <p className="text-gray-500 dark:text-gray-400">{t("providerProfilePage.noReviews")}</p>
                 </div>
               )}
             </TabsContent>

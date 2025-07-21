@@ -1,5 +1,4 @@
 "use client"
-
 import { Label } from "@/components/ui/label"
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -30,22 +29,22 @@ import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks"
 import { setCurrentJob, updateJob } from "@/lib/redux/slices/jobSlice"
 import { setQuotes, addQuote } from "@/lib/redux/slices/quoteSlice"
 import { setMessages, addMessage, setCurrentConversation } from "@/lib/redux/slices/messageSlice"
+import { useTranslation } from "@/lib/i18n"
 import PaymentModal from "@/components/payment-modal"
 import CountdownTimer from "@/components/countdown-timer"
 
 export default function JobDetails({ params }) {
+  const { t } = useTranslation()
   const router = useRouter()
   const { toast } = useToast()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const dispatch = useAppDispatch()
 
-  // Redux state
   const job = useAppSelector((state) => state.jobs.currentJob)
   const quotes = useAppSelector((state) => state.quotes.quotes)
   const messages = useAppSelector((state) => state.messages.messages)
   const jobLoading = useAppSelector((state) => state.jobs.loading)
 
-  // Local state
   const [isLoading, setIsLoading] = useState(true)
   const [newQuote, setNewQuote] = useState("")
   const [quotePrice, setQuotePrice] = useState("")
@@ -59,59 +58,47 @@ export default function JobDetails({ params }) {
   const [activeTab, setActiveTab] = useState("quotes")
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
+
   const { startMessagePolling, stopMessagePolling, subscribeToJobUpdates, sendMessage } = useRealTimeUpdates()
 
-  // Review modal state
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [reviewData, setReviewData] = useState({ rating: 5, comment: "" })
   const [isSubmittingReview, setIsSubmittingReview] = useState(false)
 
   useEffect(() => {
-    // Wait for authentication to complete
     if (authLoading) return
-
     if (!isAuthenticated) {
-      // If not authenticated, redirect to login
       router.push("/login?redirect=" + encodeURIComponent(`/jobs/${params.id}`))
       return
     }
-
     fetchJobDetails()
 
-    // Cleanup function
     return () => {
-      // Reset current job when leaving the page
       dispatch(setCurrentJob(null))
       dispatch(setQuotes([]))
       stopMessagePolling()
     }
   }, [params.id, isAuthenticated, authLoading, dispatch, router, stopMessagePolling])
 
-  // Subscribe to real-time job updates
   useEffect(() => {
     if (job?._id) {
-      console.log("Subscribing to job updates for:", job._id)
       const unsubscribe = subscribeToJobUpdates(job._id, (data) => {
-        console.log("Job update received in component:", data)
         if (data.action === "updated") {
           dispatch(updateJob(data.job))
         } else if (data.action === "hired" && data.providerId === user?._id) {
           toast({
-            title: "You've been hired!",
-            description: `You have been hired for the job: ${data.job.title}`,
+            title: t("jobDetailsPage.youveBeenHired"),
+            description: `${t("jobDetailsPage.youveBeenHiredForJob")} ${data.job.title}`,
           })
           dispatch(updateJob(data.job))
         }
       })
-
       return unsubscribe
     }
   }, [job, user, subscribeToJobUpdates, toast, dispatch])
 
-  // Listen for real-time messages
   useEffect(() => {
     const handleNewMessage = (message) => {
-      // Check if this message belongs to the current conversation
       if (message.job === params.id) {
         if (
           (message.sender._id === user?._id && message.recipient._id === messageRecipient?._id) ||
@@ -121,36 +108,27 @@ export default function JobDetails({ params }) {
         }
       }
     }
-
-    // Subscribe to new message events
     const unsubscribe = eventEmitter.on("new_message", handleNewMessage)
-
     return () => {
-      // Unsubscribe when component unmounts
       unsubscribe()
     }
   }, [dispatch, messageRecipient, params.id, user])
 
-  // Start polling for messages when recipient changes
   useEffect(() => {
     if (messageRecipient && messageRecipient._id && params.id) {
       startMessagePolling(params.id, messageRecipient._id)
     }
-
     return () => {
       stopMessagePolling()
     }
   }, [messageRecipient, params.id, startMessagePolling, stopMessagePolling])
 
-  // Scroll to bottom of messages without affecting page scroll
   useEffect(() => {
     if (messagesEndRef.current && messagesContainerRef.current) {
-      // Only scroll the messages container, not the whole page
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
     }
   }, [messages])
 
-  // Auto-complete function when timer expires
   const handleTimerComplete = async () => {
     if (job?.status === "in_progress") {
       try {
@@ -158,8 +136,8 @@ export default function JobDetails({ params }) {
         if (success) {
           dispatch(updateJob(updatedJob))
           toast({
-            title: "Job completed automatically",
-            description: "The escrow period has ended and the job has been marked as completed.",
+            title: t("jobDetailsPage.jobCompletedAutomatically"),
+            description: t("jobDetailsPage.escrowPeriodEnded"),
           })
         }
       } catch (error) {
@@ -168,33 +146,28 @@ export default function JobDetails({ params }) {
     }
   }
 
-  // Review submission function
   const handleSubmitReview = async () => {
     if (!reviewData.comment.trim()) {
       toast({
-        title: "Review required",
-        description: "Please provide a comment for your review.",
+        title: t("jobDetailsPage.reviewRequired"),
+        description: t("jobDetailsPage.pleaseProvideComment"),
         variant: "destructive",
       })
       return
     }
-
     setIsSubmittingReview(true)
-
     try {
       const revieweeId = user?.userType === "Buyer" ? job.hiredProvider?._id : job.postedBy?._id
-
       const { success } = await reviewAPI.createReview({
         jobId: job._id,
         revieweeId,
         rating: reviewData.rating,
         comment: reviewData.comment,
       })
-
       if (success) {
         toast({
-          title: "Review submitted",
-          description: "Your review has been submitted successfully.",
+          title: t("jobDetailsPage.reviewSubmitted"),
+          description: t("jobDetailsPage.reviewSubmittedSuccessfully"),
         })
         setShowReviewModal(false)
         setReviewData({ rating: 5, comment: "" })
@@ -202,8 +175,8 @@ export default function JobDetails({ params }) {
     } catch (error) {
       console.error("Review submission error:", error)
       toast({
-        title: "Review failed",
-        description: error.response?.data?.message || "There was a problem submitting your review.",
+        title: t("jobDetailsPage.reviewFailed"),
+        description: error.response?.data?.message || t("jobDetailsPage.problemSubmittingReview"),
         variant: "destructive",
       })
     } finally {
@@ -215,12 +188,9 @@ export default function JobDetails({ params }) {
     try {
       setIsLoading(true)
       const { success, job, quotes } = await jobAPI.getJob(params.id)
-
       if (success && job) {
         dispatch(setCurrentJob(job))
         dispatch(setQuotes(quotes || []))
-
-        // Set message recipient based on user type with null checks
         if (user?.userType === "Buyer" && job.hiredProvider) {
           setMessageRecipient(job.hiredProvider)
           fetchMessages(job.hiredProvider._id)
@@ -232,8 +202,8 @@ export default function JobDetails({ params }) {
     } catch (error) {
       console.error("Error fetching job:", error)
       toast({
-        title: "Error",
-        description: "Failed to load job details.",
+        title: t("common.error"),
+        description: t("jobDetailsPage.failedToLoadJobDetails"),
         variant: "destructive",
       })
     } finally {
@@ -243,7 +213,6 @@ export default function JobDetails({ params }) {
 
   const fetchMessages = async (recipientId) => {
     if (!recipientId) return
-
     try {
       const { success, messages } = await messageAPI.getMessages(params.id, recipientId)
       if (success) {
@@ -252,7 +221,7 @@ export default function JobDetails({ params }) {
           setCurrentConversation({
             jobId: params.id,
             recipientId,
-          }),
+          })
         )
       }
     } catch (error) {
@@ -262,48 +231,39 @@ export default function JobDetails({ params }) {
 
   const handleQuoteSubmit = async (e) => {
     e.preventDefault()
-
     if (!newQuote || !quotePrice) {
       toast({
-        title: "Missing information",
-        description: "Please provide both a message and price for your quote.",
+        title: t("jobDetailsPage.missingInformation"),
+        description: t("jobDetailsPage.provideMessageAndPrice"),
         variant: "destructive",
       })
       return
     }
-
     if (isNaN(Number.parseFloat(quotePrice)) || Number.parseFloat(quotePrice) <= 0) {
       toast({
-        title: "Invalid price",
-        description: "Please enter a valid price.",
+        title: t("jobDetailsPage.invalidPrice"),
+        description: t("jobDetailsPage.enterValidPrice"),
         variant: "destructive",
       })
       return
     }
-
     setIsSubmitting(true)
-
     try {
-      // Make sure we're sending the correct field names
       const { success, quote } = await quoteAPI.submitQuote({
         jobId: job._id,
         price: Number.parseFloat(quotePrice),
         message: newQuote,
         image: quoteImage,
       })
-
       if (success) {
         dispatch(addQuote(quote))
         setNewQuote("")
         setQuotePrice("")
         setQuoteImage(null)
-
         toast({
-          title: "Quote submitted",
-          description: "Your quote has been submitted successfully.",
+          title: t("jobDetailsPage.quoteSubmitted"),
+          description: t("jobDetailsPage.quoteSubmittedSuccessfully"),
         })
-
-        // Set message recipient to job poster
         if (job.postedBy && !messageRecipient) {
           setMessageRecipient(job.postedBy)
           fetchMessages(job.postedBy._id)
@@ -312,8 +272,8 @@ export default function JobDetails({ params }) {
     } catch (error) {
       console.error("Error submitting quote:", error)
       toast({
-        title: "Submission failed",
-        description: error.response?.data?.message || "There was a problem submitting your quote.",
+        title: t("jobDetailsPage.submissionFailed"),
+        description: error.response?.data?.message || t("jobDetailsPage.problemSubmittingQuote"),
         variant: "destructive",
       })
     } finally {
@@ -335,13 +295,12 @@ export default function JobDetails({ params }) {
   const handleHire = (provider) => {
     if (!provider || !provider.provider) {
       toast({
-        title: "Error",
-        description: "Invalid provider data. Please try again.",
+        title: t("common.error"),
+        description: t("jobDetailsPage.invalidProviderData"),
         variant: "destructive",
       })
       return
     }
-
     setSelectedProvider(provider)
     setShowPaymentModal(true)
   }
@@ -349,34 +308,29 @@ export default function JobDetails({ params }) {
   const confirmHire = async () => {
     if (!selectedProvider || !selectedProvider.provider || !selectedProvider.provider._id) {
       toast({
-        title: "Error",
-        description: "Invalid provider data. Please try again.",
+        title: t("common.error"),
+        description: t("jobDetailsPage.invalidProviderData"),
         variant: "destructive",
       })
       return
     }
-
     try {
       const { success, job: updatedJob } = await jobAPI.hireProvider(job._id, selectedProvider.provider._id)
-
       if (success) {
         toast({
-          title: "Provider hired!",
-          description: `You have successfully hired ${selectedProvider.provider.name || "the provider"} for this job.`,
+          title: t("jobDetailsPage.providerHired"),
+          description: `${t("jobDetailsPage.successfullyHired")} ${selectedProvider.provider.name || t("jobDetailsPage.theProvider")} ${t("jobDetailsPage.forThisJob")}.`,
         })
-
         dispatch(updateJob(updatedJob))
         setShowHireModal(false)
-
-        // Set message recipient to hired provider
         setMessageRecipient(selectedProvider.provider)
         fetchMessages(selectedProvider.provider._id)
       }
     } catch (error) {
       console.error("Error hiring provider:", error)
       toast({
-        title: "Hiring failed",
-        description: error.response?.data?.message || "There was a problem hiring this provider.",
+        title: t("jobDetailsPage.hiringFailed"),
+        description: error.response?.data?.message || t("jobDetailsPage.problemHiringProvider"),
         variant: "destructive",
       })
     }
@@ -384,31 +338,22 @@ export default function JobDetails({ params }) {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !messageRecipient || !messageRecipient._id) return
-
     try {
-      console.log("Sending message:", {
-        jobId: job._id,
-        receiverId: messageRecipient._id,
-        content: newMessage,
-      })
-
-      // Use the new sendMessage function from useRealTimeUpdates
       const success = await sendMessage(job._id, messageRecipient._id, newMessage)
-
       if (success) {
         setNewMessage("")
       } else {
         toast({
-          title: "Message failed",
-          description: "There was a problem sending your message.",
+          title: t("jobDetailsPage.messageFailed"),
+          description: t("jobDetailsPage.problemSendingMessage"),
           variant: "destructive",
         })
       }
     } catch (error) {
       console.error("Error sending message:", error)
       toast({
-        title: "Message failed",
-        description: error.response?.data?.message || "There was a problem sending your message.",
+        title: t("jobDetailsPage.messageFailed"),
+        description: error.response?.data?.message || t("jobDetailsPage.problemSendingMessage"),
         variant: "destructive",
       })
     }
@@ -417,16 +362,13 @@ export default function JobDetails({ params }) {
   const handlePaymentSuccess = (updatedJob) => {
     dispatch(updateJob(updatedJob))
     setShowPaymentModal(false)
-
-    // Set message recipient to hired provider
     if (updatedJob.hiredProvider) {
       setMessageRecipient(updatedJob.hiredProvider)
       fetchMessages(updatedJob.hiredProvider._id)
     }
-
     toast({
-      title: "Provider hired!",
-      description: `You have successfully hired a provider for this job.`,
+      title: t("jobDetailsPage.providerHired"),
+      description: t("jobDetailsPage.successfullyHiredProvider"),
     })
   }
 
@@ -436,7 +378,6 @@ export default function JobDetails({ params }) {
 
   const switchToMessagesTab = (provider) => {
     if (!provider) return
-
     setMessageRecipient(provider)
     if (provider._id) {
       fetchMessages(provider._id)
@@ -445,37 +386,34 @@ export default function JobDetails({ params }) {
   }
 
   const handleMarkComplete = async () => {
-    // Check if timer has expired
     if (job?.escrowEndDate) {
       const now = new Date()
       const escrowEndDate = new Date(job.escrowEndDate)
-
       if (now < escrowEndDate) {
         const timeRemaining = Math.ceil((escrowEndDate - now) / 1000)
         toast({
-          title: "Cannot complete yet",
-          description: `Please wait ${timeRemaining} seconds before marking the job as completed`,
+          title: t("jobDetailsPage.cannotCompleteYet"),
+          description: `${t("jobDetailsPage.pleaseWait")} ${timeRemaining} ${t("jobDetailsPage.secondsBeforeMarkingComplete")}`,
           variant: "destructive",
         })
         return
       }
     }
-
-    if (confirm("Are you sure you want to mark this job as completed?")) {
+    if (confirm(t("jobDetailsPage.areYouSureMarkComplete"))) {
       try {
         const { success, job: updatedJob } = await jobAPI.completeJob(job._id)
         if (success) {
           dispatch(updateJob(updatedJob))
           toast({
-            title: "Job completed",
-            description: "The job has been marked as completed successfully.",
+            title: t("jobDetailsPage.jobCompleted"),
+            description: t("jobDetailsPage.jobMarkedAsCompleted"),
           })
         }
       } catch (error) {
         console.error("Mark complete error:", error)
         toast({
-          title: "Action failed",
-          description: error.response?.data?.message || "There was a problem marking the job as completed.",
+          title: t("jobDetailsPage.actionFailed"),
+          description: error.response?.data?.message || t("jobDetailsPage.problemMarkingComplete"),
           variant: "destructive",
         })
       }
@@ -494,12 +432,12 @@ export default function JobDetails({ params }) {
     return (
       <div className="container py-10">
         <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <h3 className="text-xl font-medium mb-2">Job not found</h3>
+          <h3 className="text-xl font-medium mb-2">{t("jobDetailsPage.jobNotFound")}</h3>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
-            The job you're looking for doesn't exist or has been removed.
+            {t("jobDetailsPage.jobDoesNotExist")}
           </p>
           <Button asChild>
-            <Link href="/jobs">Browse Jobs</Link>
+            <Link href="/jobs">{t("jobDetailsPage.browseJobs")}</Link>
           </Button>
         </div>
       </div>
@@ -509,7 +447,6 @@ export default function JobDetails({ params }) {
   return (
     <div className="container py-10">
       <div className="grid md:grid-cols-3 gap-6">
-        {/* Job Details */}
         <div className="md:col-span-2">
           <Card>
             <CardHeader>
@@ -531,56 +468,53 @@ export default function JobDetails({ params }) {
                     </div>
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 mr-1" />
-                      {job.status === "active" ? "Open" : job.status === "in_progress" ? "In Progress" : "Completed"}
+                      {job.status === "active"
+                        ? t("jobDetailsPage.openForQuotes")
+                        : job.status === "in_progress"
+                        ? t("jobDetailsPage.inProgress")
+                        : t("jobDetailsPage.completed")}
                     </div>
                   </CardDescription>
                 </div>
-
-                {user?.userType === "Buyer" &&
-                  job.postedBy &&
-                  job.postedBy._id === user?._id &&
-                  job.status === "active" && (
-                    <Button
-                      variant="outline"
-                      className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-                      onClick={async () => {
-                        if (confirm("Are you sure you want to cancel this job?")) {
-                          try {
-                            const { success, job: updatedJob } = await jobAPI.updateJob(job._id, {
-                              status: "cancelled",
-                            })
-                            if (success) {
-                              dispatch(updateJob(updatedJob))
-                              toast({
-                                title: "Job cancelled",
-                                description: "The job has been cancelled successfully.",
-                              })
-                            }
-                          } catch (error) {
-                            console.error("Cancel job error:", error)
+                {user?.userType === "Buyer" && job.postedBy && job.postedBy._id === user?._id && job.status === "active" && (
+                  <Button
+                    variant="outline"
+                    className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                    onClick={async () => {
+                      if (confirm(t("jobDetailsPage.areYouSureCancelJob"))) {
+                        try {
+                          const { success, job: updatedJob } = await jobAPI.updateJob(job._id, { status: "cancelled" })
+                          if (success) {
+                            dispatch(updateJob(updatedJob))
                             toast({
-                              title: "Cancellation failed",
-                              description: error.response?.data?.message || "There was a problem cancelling the job.",
-                              variant: "destructive",
+                              title: t("jobDetailsPage.jobCancelled"),
+                              description: t("jobDetailsPage.jobCancelledSuccessfully"),
                             })
                           }
+                        } catch (error) {
+                          console.error("Cancel job error:", error)
+                          toast({
+                            title: t("jobDetailsPage.cancellationFailed"),
+                            description: error.response?.data?.message || t("jobDetailsPage.problemCancellingJob"),
+                            variant: "destructive",
+                          })
                         }
-                      }}
-                    >
-                      Cancel Job
-                    </Button>
-                  )}
+                      }
+                    }}
+                  >
+                    {t("jobDetailsPage.cancelJob")}
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold">Job Description</h3>
+                  <h3 className="text-lg font-semibold">{t("jobDetailsPage.jobDescription")}</h3>
                   <p className="text-gray-600 dark:text-gray-300 mt-2">{job.description}</p>
                 </div>
-
                 <div>
-                  <h3 className="text-lg font-semibold">Posted By</h3>
+                  <h3 className="text-lg font-semibold">{t("jobDetailsPage.postedBy")}</h3>
                   <Link href={`/users/${job?.postedBy?._id}`} className="block mt-2">
                     <div className="flex items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors">
                       <Avatar className="h-10 w-10 mr-3">
@@ -601,7 +535,9 @@ export default function JobDetails({ params }) {
                         <p className="font-medium text-blue-600 hover:text-blue-800">
                           {job?.postedBy?.name || job?.postedBy?.email || "User"}
                         </p>
-                        <p className="text-sm text-gray-500">Job Poster • Click to view profile</p>
+                        <p className="text-sm text-gray-500">
+                          {t("jobDetailsPage.jobPoster")} • {t("jobDetailsPage.clickToViewProfile")}
+                        </p>
                       </div>
                     </div>
                   </Link>
@@ -609,19 +545,19 @@ export default function JobDetails({ params }) {
               </div>
             </CardContent>
           </Card>
-
           <div className="mt-6">
             <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList className="mb-4">
-                <TabsTrigger value="quotes">Quotes ({quotes?.length || 0})</TabsTrigger>
-                <TabsTrigger value="messages">Messages</TabsTrigger>
+                <TabsTrigger value="quotes">
+                  {t("jobDetailsPage.quotes")} ({quotes?.length || 0})
+                </TabsTrigger>
+                <TabsTrigger value="messages">{t("jobDetailsPage.messages")}</TabsTrigger>
               </TabsList>
-
               <TabsContent value="quotes">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-xl">Service Provider Quotes</CardTitle>
-                    <CardDescription>Review quotes from service providers</CardDescription>
+                    <CardTitle className="text-xl">{t("jobDetailsPage.serviceProviderQuotes")}</CardTitle>
+                    <CardDescription>{t("jobDetailsPage.reviewQuotes")}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {quotes && quotes.length > 0 ? (
@@ -652,15 +588,13 @@ export default function JobDetails({ params }) {
                                     {quote.provider?.name || quote.provider?.email || "Provider"}
                                   </p>
                                   <p className="text-sm text-gray-500">
-                                    {new Date(quote.createdAt).toLocaleDateString()} • Click to view profile
+                                    {new Date(quote.createdAt).toLocaleDateString()} • {t("jobDetailsPage.clickToViewProfile")}
                                   </p>
                                 </div>
                               </Link>
                               <div className="text-xl font-bold text-green-600">${quote.price}</div>
                             </div>
-
                             <p className="text-gray-600 dark:text-gray-300 mb-4">{quote.message}</p>
-
                             {quote.image && (
                               <div className="mb-4">
                                 <img
@@ -670,12 +604,11 @@ export default function JobDetails({ params }) {
                                 />
                               </div>
                             )}
-
                             {user?.userType === "Buyer" && job.status === "active" && (
                               <div className="flex gap-3 mt-4">
-                                <Button onClick={() => handleHire(quote)}>Hire</Button>
+                                <Button onClick={() => handleHire(quote)}>{t("jobDetailsPage.hire")}</Button>
                                 <Button variant="outline" onClick={() => switchToMessagesTab(quote.provider)}>
-                                  Message
+                                  {t("jobDetailsPage.message")}
                                 </Button>
                               </div>
                             )}
@@ -684,35 +617,33 @@ export default function JobDetails({ params }) {
                       </div>
                     ) : (
                       <div className="text-center py-8">
-                        <p className="text-gray-500 dark:text-gray-400 mb-2">No quotes yet</p>
+                        <p className="text-gray-500 dark:text-gray-400 mb-2">{t("jobDetailsPage.noQuotesYet")}</p>
                         <p className="text-sm text-gray-400 dark:text-gray-500">
-                          Be the first to send a quote for this job
+                          {t("jobDetailsPage.beFirstToSendQuote")}
                         </p>
                       </div>
                     )}
-
                     {user?.userType === "Seller" && job.status === "active" && (
                       <div className="mt-6 border-t pt-6">
-                        <h3 className="text-lg font-semibold mb-4">Send a Quote</h3>
+                        <h3 className="text-lg font-semibold mb-4">{t("jobDetailsPage.sendAQuote")}</h3>
                         <form onSubmit={handleQuoteSubmit} className="space-y-4">
                           <div>
-                            <Label htmlFor="quoteMessage">Message</Label>
+                            <Label htmlFor="quoteMessage">{t("jobDetailsPage.message")}</Label>
                             <Textarea
                               id="quoteMessage"
-                              placeholder="Describe your experience and how you can help with this job..."
+                              placeholder={t("jobDetailsPage.describeExperience")}
                               value={newQuote}
                               onChange={(e) => setNewQuote(e.target.value)}
                               rows={4}
                               required
                             />
                           </div>
-
                           <div>
-                            <Label htmlFor="quotePrice">Your Price ($)</Label>
+                            <Label htmlFor="quotePrice">{t("jobDetailsPage.yourPrice")}</Label>
                             <Input
                               id="quotePrice"
                               type="number"
-                              placeholder="Enter your price"
+                              placeholder={t("jobDetailsPage.enterYourPrice")}
                               value={quotePrice}
                               onChange={(e) => setQuotePrice(e.target.value)}
                               min="1"
@@ -720,9 +651,8 @@ export default function JobDetails({ params }) {
                               required
                             />
                           </div>
-
                           <div>
-                            <Label htmlFor="quoteImage">Attach Image (Optional)</Label>
+                            <Label htmlFor="quoteImage">{t("jobDetailsPage.attachImage")}</Label>
                             <div className="flex items-center gap-2 mt-1">
                               <Input
                                 id="quoteImage"
@@ -737,20 +667,19 @@ export default function JobDetails({ params }) {
                                 onClick={() => document.getElementById("quoteImage").click()}
                               >
                                 <Upload className="h-4 w-4 mr-2" />
-                                Upload Image
+                                {t("jobDetailsPage.uploadImage")}
                               </Button>
-                              {quoteImage && <span className="text-sm text-green-600">Image attached</span>}
+                              {quoteImage && <span className="text-sm text-green-600">{t("jobDetailsPage.imageAttached")}</span>}
                             </div>
                           </div>
-
                           <Button type="submit" disabled={isSubmitting}>
                             {isSubmitting ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Submitting...
+                                {t("jobDetailsPage.submitting")}
                               </>
                             ) : (
-                              "Submit Quote"
+                              t("jobDetailsPage.submitQuote")
                             )}
                           </Button>
                         </form>
@@ -759,12 +688,11 @@ export default function JobDetails({ params }) {
                   </CardContent>
                 </Card>
               </TabsContent>
-
               <TabsContent value="messages">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-xl">Messages</CardTitle>
-                    <CardDescription>Communicate with the job poster or service providers</CardDescription>
+                    <CardTitle className="text-xl">{t("jobDetailsPage.messages")}</CardTitle>
+                    <CardDescription>{t("jobDetailsPage.communicateWithJobPoster")}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="h-96 flex flex-col">
@@ -801,17 +729,16 @@ export default function JobDetails({ params }) {
                           ))
                         ) : (
                           <div className="flex items-center justify-center h-full">
-                            <p className="text-gray-500 dark:text-gray-400">No messages yet</p>
+                            <p className="text-gray-500 dark:text-gray-400">{t("jobDetailsPage.noMessagesYet")}</p>
                           </div>
                         )}
                         <div ref={messagesEndRef} />
                       </div>
-
                       {messageRecipient ? (
                         <div className="border-t pt-4">
                           <div className="flex gap-2">
                             <Textarea
-                              placeholder="Type your message..."
+                              placeholder={t("jobDetailsPage.typeYourMessage")}
                               value={newMessage}
                               onChange={(e) => setNewMessage(e.target.value)}
                               className="min-h-[60px]"
@@ -830,11 +757,11 @@ export default function JobDetails({ params }) {
                       ) : (
                         <div className="border-t pt-4 text-center text-gray-500">
                           {job.status === "active" && user?.userType === "Seller" ? (
-                            <p>Submit a quote to start messaging with the job poster</p>
+                            <p>{t("jobDetailsPage.submitAQuoteToStartMessaging")}</p>
                           ) : job.status === "active" && user?.userType === "Buyer" ? (
-                            <p>Hire a provider to start messaging</p>
+                            <p>{t("jobDetailsPage.hireAProviderToStartMessaging")}</p>
                           ) : (
-                            <p>Messaging is not available for this job</p>
+                            <p>{t("jobDetailsPage.messagingNotAvailable")}</p>
                           )}
                         </div>
                       )}
@@ -845,61 +772,52 @@ export default function JobDetails({ params }) {
             </Tabs>
           </div>
         </div>
-
-        {/* Sidebar */}
         <div className="md:col-span-1">
           <Card className="sticky top-20">
             <CardHeader>
-              <CardTitle className="text-xl">Job Summary</CardTitle>
+              <CardTitle className="text-xl">{t("jobDetailsPage.jobSummary")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</h3>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("jobDetailsPage.status")}</h3>
                 <p className="font-semibold mt-1">
                   {job.status === "active"
-                    ? "Open for Quotes"
+                    ? t("jobDetailsPage.openForQuotes")
                     : job.status === "in_progress"
-                      ? "In Progress"
-                      : job.status === "completed"
-                        ? "Completed"
-                        : "Cancelled"}
+                    ? t("jobDetailsPage.inProgress")
+                    : job.status === "completed"
+                    ? t("jobDetailsPage.completed")
+                    : t("jobDetailsPage.cancelled")}
                 </p>
               </div>
-
-              {/* Timer Display */}
               {job.status === "in_progress" && job.escrowEndDate && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                  <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Escrow Timer</h3>
+                  <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">{t("jobDetailsPage.escrowTimer")}</h3>
                   <CountdownTimer endDate={job.escrowEndDate} onComplete={handleTimerComplete} />
                   <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                    Job will auto-complete when timer reaches zero
+                    {t("jobDetailsPage.jobWillAutoComplete")}
                   </p>
                 </div>
               )}
-
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Budget</h3>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("jobDetailsPage.budget")}</h3>
                 <p className="font-semibold mt-1">${job.price}</p>
               </div>
-
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Location</h3>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("jobDetailsPage.location")}</h3>
                 <p className="font-semibold mt-1">{job.location}</p>
               </div>
-
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Date Posted</h3>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("jobDetailsPage.datePosted")}</h3>
                 <p className="font-semibold mt-1">{new Date(job.createdAt).toLocaleDateString()}</p>
               </div>
-
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Quotes Received</h3>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("jobDetailsPage.quotesReceived")}</h3>
                 <p className="font-semibold mt-1">{quotes?.length || 0}</p>
               </div>
-
               {job.status === "in_progress" && job.hiredProvider && (
                 <div className="border-t pt-4 mt-4">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Hired Provider</h3>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">{t("jobDetailsPage.hiredProvider")}</h3>
                   <div className="flex items-center">
                     <Avatar className="h-10 w-10 mr-3">
                       <AvatarImage
@@ -924,58 +842,53 @@ export default function JobDetails({ params }) {
                       </p>
                     </div>
                   </div>
-
                   {user?.userType === "Buyer" && user._id === job.postedBy?._id && (
                     <Button className="w-full mt-4" onClick={handleMarkComplete}>
-                      Mark as Completed
+                      {t("jobDetailsPage.markAsCompleted")}
                     </Button>
                   )}
                 </div>
               )}
-
-              {/* Add review button for completed jobs */}
               {job.status === "completed" &&
                 ((user?.userType === "Buyer" && user._id === job.postedBy?._id) ||
                   (user?.userType === "Seller" && user._id === job.hiredProvider?._id)) && (
                   <div className="border-t pt-4 mt-4">
                     <Button className="w-full" onClick={() => setShowReviewModal(true)}>
-                      Leave a Review
+                      {t("jobDetailsPage.leaveAReview")}
                     </Button>
                   </div>
                 )}
-
               {user?.userType === "Buyer" && user._id === job.postedBy?._id && job.status === "active" && (
                 <div className="border-t pt-4 mt-4">
                   <Button
                     variant="outline"
                     className="w-full text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
                     onClick={async () => {
-                      if (confirm("Are you sure you want to cancel this job?")) {
+                      if (confirm(t("jobDetailsPage.areYouSureCancelJob"))) {
                         try {
                           const { success, job: updatedJob } = await jobAPI.updateJob(job._id, { status: "cancelled" })
                           if (success) {
                             dispatch(updateJob(updatedJob))
                             toast({
-                              title: "Job cancelled",
-                              description: "The job has been cancelled successfully.",
+                              title: t("jobDetailsPage.jobCancelled"),
+                              description: t("jobDetailsPage.jobCancelledSuccessfully"),
                             })
                           }
                         } catch (error) {
                           console.error("Cancel job error:", error)
                           toast({
-                            title: "Cancellation failed",
-                            description: error.response?.data?.message || "There was a problem cancelling the job.",
+                            title: t("jobDetailsPage.cancellationFailed"),
+                            description: error.response?.data?.message || t("jobDetailsPage.problemCancellingJob"),
                             variant: "destructive",
                           })
                         }
                       }
                     }}
                   >
-                    Cancel Job
+                    {t("jobDetailsPage.cancelJob")}
                   </Button>
                 </div>
               )}
-
               {user?.userType === "Seller" && job.status === "active" && (
                 <div className="border-t pt-4 mt-4">
                   <Button
@@ -988,7 +901,7 @@ export default function JobDetails({ params }) {
                       }, 100)
                     }}
                   >
-                    Send a Quote
+                    {t("jobDetailsPage.sendAQuote")}
                   </Button>
                 </div>
               )}
@@ -996,8 +909,6 @@ export default function JobDetails({ params }) {
           </Card>
         </div>
       </div>
-
-      {/* Payment Modal */}
       {showPaymentModal && selectedProvider && selectedProvider.provider && (
         <PaymentModal
           isOpen={showPaymentModal}
@@ -1009,34 +920,30 @@ export default function JobDetails({ params }) {
           onSuccess={handlePaymentSuccess}
         />
       )}
-
-      {/* Hire Confirmation Modal */}
       <AlertDialog open={showHireModal} onOpenChange={setShowHireModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Hiring</AlertDialogTitle>
+            <AlertDialogTitle>{t("jobDetailsPage.confirmHiring")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to hire{" "}
-              {selectedProvider?.provider?.name || selectedProvider?.provider?.email || "this provider"} for $
-              {selectedProvider?.price}? The funds will be held in escrow until the job is completed.
+              {t("jobDetailsPage.confirmHiringDescription", {
+                providerName: selectedProvider?.provider?.name || selectedProvider?.provider?.email || t("jobDetailsPage.theProvider"),
+                price: selectedProvider?.price
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmHire}>Confirm Hire</AlertDialogAction>
+            <AlertDialogCancel>{t("jobDetailsPage.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmHire}>{t("jobDetailsPage.confirm")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Review modal at the end of the component */}
       {showReviewModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Leave a Review</h3>
-
+            <h3 className="text-lg font-semibold mb-4">{t("jobDetailsPage.leaveAReviewTitle")}</h3>
             <div className="space-y-4">
               <div>
-                <Label>Rating</Label>
+                <Label>{t("jobDetailsPage.rating")}</Label>
                 <div className="flex space-x-1 mt-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -1050,30 +957,28 @@ export default function JobDetails({ params }) {
                   ))}
                 </div>
               </div>
-
               <div>
-                <Label>Comment</Label>
+                <Label>{t("jobDetailsPage.comment")}</Label>
                 <Textarea
                   value={reviewData.comment}
                   onChange={(e) => setReviewData((prev) => ({ ...prev, comment: e.target.value }))}
-                  placeholder="Share your experience..."
+                  placeholder={t("jobDetailsPage.shareYourExperience")}
                   rows={4}
                 />
               </div>
             </div>
-
             <div className="flex justify-end space-x-2 mt-6">
               <Button variant="outline" onClick={() => setShowReviewModal(false)}>
-                Cancel
+                {t("jobDetailsPage.cancel")}
               </Button>
               <Button onClick={handleSubmitReview} disabled={isSubmittingReview}>
                 {isSubmittingReview ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
+                    {t("jobDetailsPage.submitting")}
                   </>
                 ) : (
-                  "Submit Review"
+                  t("jobDetailsPage.submitReview")
                 )}
               </Button>
             </div>
