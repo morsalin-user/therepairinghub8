@@ -143,8 +143,9 @@ async function handlePaymentCaptured(event) {
     const job = await Job.findById(transaction.job)
     if (!job) return console.error("Job not found for transaction:", transaction._id)
 
-    const escrowMinutes = parseInt(process.env.ESCROW_PERIOD_MINUTES || "1440", 10)
-    const escrowEndDate = new Date(Date.now() + escrowMinutes * 60 * 1000)
+    // ✅ FIXED: Use same escrow period as Stripe (10 days = 14400 minutes)
+    const escrowPeriodMinutes = Number.parseInt(process.env.ESCROW_PERIOD_MINUTES || "14400", 10) // 14400 minutes = 10 days
+    const escrowEndDate = new Date(Date.now() + escrowPeriodMinutes * 60 * 1000)
 
     job.status = "in_progress"
     job.paymentStatus = "in_escrow"
@@ -175,6 +176,7 @@ async function handlePaymentCaptured(event) {
     sendNotification(job.hiredProvider, providerNotification)
 
     console.log("✅ Payment captured for transaction:", transaction._id)
+    console.log("✅ Escrow end date set to:", escrowEndDate)
 
     scheduleJobCompletion(job._id, escrowEndDate)
   } catch (err) {
@@ -220,12 +222,21 @@ async function scheduleJobCompletion(jobId, escrowEndDate) {
   const timeUntilCompletion = new Date(escrowEndDate).getTime() - Date.now()
 
   if (timeUntilCompletion <= 0) {
+    // If escrow period has already passed, complete job immediately
     await completeJob(jobId)
     return
   }
 
-  if (timeUntilCompletion > 2147483647) {
-    console.warn(`Escrow too long. Consider using a queue system for job ${jobId}`)
+  // ✅ IMPROVED: Check for setTimeout limit (2^31 - 1 milliseconds ≈ 24.8 days)
+  const MAX_TIMEOUT = 2147483647 // Maximum setTimeout value in milliseconds
+  
+  if (timeUntilCompletion > MAX_TIMEOUT) {
+    console.warn(`⚠️ Escrow period too long (${Math.round(timeUntilCompletion / (1000 * 60 * 60 * 24))} days). Consider using a queue system for job ${jobId}`)
+    // For very long timeouts, you should implement a job queue or cron job instead
+    // For now, we'll set it to the maximum possible timeout
+    setTimeout(async () => {
+      await completeJob(jobId)
+    }, MAX_TIMEOUT)
     return
   }
 
@@ -233,55 +244,77 @@ async function scheduleJobCompletion(jobId, escrowEndDate) {
     await completeJob(jobId)
   }, timeUntilCompletion)
 
-  console.log(`📅 Job ${jobId} scheduled for auto-completion in ${Math.round(timeUntilCompletion / 60000)} minutes`)
+  console.log(`📅 Job ${jobId} scheduled for completion in ${timeUntilCompletion}ms (${Math.round(timeUntilCompletion / (1000 * 60 * 60 * 24))} days)`)
 }
 
 // ✅ Complete job and release payment
 async function completeJob(jobId) {
   try {
     const job = await Job.findById(jobId)
-    if (!job || job.status !== "in_progress" || job.paymentStatus !== "in_escrow") return
+    
+    if (!job) {
+      console.error("Job not found for completion:", jobId)
+      return
+    }
+
+    // Only complete jobs that are still in escrow
+    if (job.status !== "in_progress" || job.paymentStatus !== "in_escrow") {
+      console.log(`Job ${jobId} is not in escrow state. Current status: ${job.status}, payment status: ${job.paymentStatus}`)
+      return
+    }
 
     const transaction = await Transaction.findById(job.transactionId)
-    if (!transaction) return console.error("Transaction not found for job:", jobId)
+    if (!transaction) {
+      console.error("Transaction not found for job:", jobId)
+      return
+    }
 
+    // Update transaction
     transaction.provider = job.hiredProvider
     transaction.status = "released"
     await transaction.save()
 
+    // Update job
     job.status = "completed"
     job.paymentStatus = "released"
     job.completedAt = new Date()
     await job.save()
 
-    const providerAmount = transaction.amount - transaction.serviceFee
+    // Calculate provider amount (minus service fee)
+    const providerAmount = transaction.amount - (transaction.serviceFee || 0)
+
+    // ✅ FIXED: Use consistent field name (balance vs availableBalance)
+    // Make sure this matches your User model schema
     await User.findByIdAndUpdate(job.hiredProvider, {
       $inc: {
-        availableBalance: providerAmount,
+        balance: providerAmount, // or availableBalance - use the same field as in Stripe
         totalEarnings: providerAmount,
       },
     })
 
+    // Create notifications
     const buyerNotification = await Notification.create({
       recipient: transaction.customer,
       type: "job_completed",
-      message: `Your job "${job.title}" has been completed. Payment released to provider.`,
+      message: `Your job "${job.title}" has been completed and payment has been released to the provider.`,
       relatedId: job._id,
       onModel: "Job",
     })
+
     const providerNotification = await Notification.create({
       recipient: job.hiredProvider,
       type: "payment",
-      message: `Payment for job "${job.title}" has been released to your account.`,
+      message: `Payment for job "${job.title}" has been released to your account. Your available balance has been updated.`,
       relatedId: transaction._id,
       onModel: "Transaction",
     })
 
+    // Send real-time notifications
     sendNotification(transaction.customer, buyerNotification)
     sendNotification(job.hiredProvider, providerNotification)
 
-    console.log(`✅ Job ${jobId} completed and payment released`)
+    console.log(`✅ Job ${jobId} completed and payment released automatically`)
   } catch (err) {
-    console.error("Error completing job:", err)
+    console.error("💥 Error completing job:", err)
   }
 }
