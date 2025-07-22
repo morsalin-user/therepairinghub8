@@ -1,3 +1,4 @@
+// api/api/payments/paypal/capture/route.js
 import { NextResponse } from "next/server"
 import connectToDatabase from "../../../../../lib/db"
 import { capturePayPalPayment } from "../../../../../lib/payment"

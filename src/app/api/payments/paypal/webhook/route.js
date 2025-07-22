@@ -1,3 +1,4 @@
+// api/api/payments/paypal/webhook/route.js
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 import connectToDatabase from "../../../../../lib/db"
@@ -71,7 +72,7 @@ async function verifyPayPalWebhookSignature({
 }) {
   try {
     const basicAuth = Buffer.from(
-      `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
+      `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_SECRET}`
     ).toString("base64")
 
     const tokenRes = await fetch(`${process.env.PAYPAL_API_BASE_URL}/v1/oauth2/token`, {
