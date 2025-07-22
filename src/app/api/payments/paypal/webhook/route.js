@@ -145,7 +145,7 @@ async function handlePaymentCaptured(event) {
     if (!job) return console.error("Job not found for transaction:", transaction._id)
 
     // ✅ FIXED: Use same escrow period as Stripe (10 days = 14400 minutes)
-    const escrowPeriodMinutes = Number.parseInt(process.env.ESCROW_PERIOD_MINUTES || "14400", 10) // 14400 minutes = 10 days
+    const escrowPeriodMinutes = Number.parseInt(process.env.ESCROW_PERIOD_MINUTES || "1", 10)
     const escrowEndDate = new Date(Date.now() + escrowPeriodMinutes * 60 * 1000)
 
     job.status = "in_progress"
