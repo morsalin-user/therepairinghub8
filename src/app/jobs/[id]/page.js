@@ -129,22 +129,52 @@ export default function JobDetails({ params }) {
     }
   }, [messages])
 
+  // const handleTimerComplete = async () => {
+  //   if (job?.status === "in_progress") {
+  //     try {
+  //       const { success, job: updatedJob } = await jobAPI.completeJob(job._id)
+  //       if (success) {
+  //         dispatch(updateJob(updatedJob))
+  //         toast({
+  //           title: t("jobDetailsPage.jobCompletedAutomatically"),
+  //           description: t("jobDetailsPage.escrowPeriodEnded"),
+  //         })
+  //       }
+  //     } catch (error) {
+  //       console.error("Auto-complete error:", error)
+  //     }
+  //   }
+  // }
+
   const handleTimerComplete = async () => {
     if (job?.status === "in_progress") {
       try {
-        const { success, job: updatedJob } = await jobAPI.completeJob(job._id)
+        console.log("Attempting to complete job:", job._id);
+        // ✅ Use the actual job ID instead of hardcoded one
+        const { success, job: updatedJob } = await jobAPI.completeJob(job._id);
         if (success) {
-          dispatch(updateJob(updatedJob))
+          console.log("Job completed successfully:", updatedJob);
+          dispatch(updateJob(updatedJob));
           toast({
             title: t("jobDetailsPage.jobCompletedAutomatically"),
             description: t("jobDetailsPage.escrowPeriodEnded"),
-          })
+          });
+        } else {
+          console.error("Failed to complete job: API call was not successful");
         }
       } catch (error) {
-        console.error("Auto-complete error:", error)
+        console.error("Auto-complete error:", error);
+        toast({
+          title: t("jobDetailsPage.autoCompleteFailed"),
+          description: t("jobDetailsPage.problemAutoCompletingJob"),
+          variant: "destructive",
+        });
       }
+    } else {
+      console.log("Job status is not 'in_progress', so it cannot be auto-completed.");
     }
-  }
+  };
+
 
   const handleSubmitReview = async () => {
     if (!reviewData.comment.trim()) {
@@ -471,8 +501,8 @@ export default function JobDetails({ params }) {
                       {job.status === "active"
                         ? t("jobDetailsPage.openForQuotes")
                         : job.status === "in_progress"
-                        ? t("jobDetailsPage.inProgress")
-                        : t("jobDetailsPage.completed")}
+                          ? t("jobDetailsPage.inProgress")
+                          : t("jobDetailsPage.completed")}
                     </div>
                   </CardDescription>
                 </div>
@@ -525,9 +555,9 @@ export default function JobDetails({ params }) {
                         <AvatarFallback>
                           {job?.postedBy?.name
                             ? job?.postedBy?.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
                             : "U"}
                         </AvatarFallback>
                       </Avatar>
@@ -577,9 +607,9 @@ export default function JobDetails({ params }) {
                                   <AvatarFallback>
                                     {quote.provider?.name
                                       ? quote.provider.name
-                                          .split(" ")
-                                          .map((n) => n[0])
-                                          .join("")
+                                        .split(" ")
+                                        .map((n) => n[0])
+                                        .join("")
                                       : "P"}
                                   </AvatarFallback>
                                 </Avatar>
@@ -704,11 +734,10 @@ export default function JobDetails({ params }) {
                               className={`flex ${message.sender._id === user?._id ? "justify-end" : "justify-start"}`}
                             >
                               <div
-                                className={`max-w-[80%] rounded-lg p-3 ${
-                                  message.sender._id === user?._id
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-gray-100 dark:bg-gray-800"
-                                }`}
+                                className={`max-w-[80%] rounded-lg p-3 ${message.sender._id === user?._id
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-gray-100 dark:bg-gray-800"
+                                  }`}
                               >
                                 <div className="text-xs mb-1">
                                   {message.sender._id !== user?._id && (
@@ -784,10 +813,10 @@ export default function JobDetails({ params }) {
                   {job.status === "active"
                     ? t("jobDetailsPage.openForQuotes")
                     : job.status === "in_progress"
-                    ? t("jobDetailsPage.inProgress")
-                    : job.status === "completed"
-                    ? t("jobDetailsPage.completed")
-                    : t("jobDetailsPage.cancelled")}
+                      ? t("jobDetailsPage.inProgress")
+                      : job.status === "completed"
+                        ? t("jobDetailsPage.completed")
+                        : t("jobDetailsPage.cancelled")}
                 </p>
               </div>
               {job.status === "in_progress" && job.escrowEndDate && (
@@ -827,9 +856,9 @@ export default function JobDetails({ params }) {
                       <AvatarFallback>
                         {job?.hiredProvider?.name
                           ? job?.hiredProvider.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
                           : "P"}
                       </AvatarFallback>
                     </Avatar>

@@ -276,7 +276,7 @@ export const capturePayPalPayment = async (orderId) => {
         status: "in_progress",
         paymentStatus: "in_escrow",
         transactionId: transaction._id,
-        escrowEndDate: new Date(Date.now() +  10000), // Default 1 minute
+        escrowEndDate: new Date(Date.now() + 10000), // Default 1 minute
       },
       { new: true },
     )
@@ -296,10 +296,12 @@ export const capturePayPalPayment = async (orderId) => {
 }
 
 // Release payment to provider
+
+// Release payment to provider - FIXED VERSION
 export const releasePayment = async (jobId) => {
   try {
     // Get job with transaction
-    const job = await Job.findById(jobId)
+    const job = await Job.findById(jobId).populate('hiredProvider transactionId')
     if (!job) {
       throw new Error("Job not found")
     }
@@ -312,36 +314,93 @@ export const releasePayment = async (jobId) => {
       throw new Error("Payment is not in escrow")
     }
 
-    // Get transaction
-    const transaction = await Transaction.findById(job.transactionId)
+    // Get transaction - handle both cases: transactionId as ObjectId or as reference
+    let transaction
+    if (job.transactionId) {
+      if (typeof job.transactionId === 'object' && job.transactionId._id) {
+        // Already populated
+        transaction = job.transactionId
+      } else {
+        // Need to fetch separately
+        transaction = await Transaction.findById(job.transactionId)
+      }
+    } else {
+      // Find transaction by job ID if transactionId is not set
+      transaction = await Transaction.findOne({
+        job: jobId,
+        status: "in_escrow"
+      })
+    }
+
     if (!transaction) {
       throw new Error("Transaction not found")
     }
 
-    // Update transaction
-    transaction.provider = job.hiredProvider
+    console.log(`Processing payment release for job ${jobId}:`, {
+      transactionId: transaction._id,
+      providerId: job.hiredProvider._id,
+      amount: transaction.amount,
+      serviceFee: transaction.serviceFee
+    })
+
+    // Calculate provider amount (amount minus service fee)
+    const providerAmount = transaction.amount - (transaction.serviceFee || 0)
+
+    if (providerAmount <= 0) {
+      throw new Error("Invalid provider amount calculated")
+    }
+
+    // Update transaction first
+    transaction.provider = job.hiredProvider._id
     transaction.status = "released"
     await transaction.save()
 
-    // Update job
+    console.log(`Transaction ${transaction._id} updated to released status`)
+
+    // Update job status
     job.paymentStatus = "released"
     job.status = "completed"
     job.completedAt = new Date()
     await job.save()
 
-    // Update provider's available balance
-    const providerAmount = transaction.amount - transaction.serviceFee
-    await User.findByIdAndUpdate(job.hiredProvider, {
-      $inc: {
-        availableBalance: providerAmount,
-        totalEarnings: providerAmount,
+    console.log(`Job ${jobId} updated to completed status`)
+
+    // Update provider's balance - using proper error handling
+    const provider = await User.findById(job.hiredProvider._id)
+    if (!provider) {
+      throw new Error("Provider not found")
+    }
+
+    // Calculate new balances
+    const newAvailableBalance = (provider.availableBalance || 0) + providerAmount
+    const newTotalEarnings = (provider.totalEarnings || 0) + providerAmount
+
+    // Update provider with new balances
+    const updatedProvider = await User.findByIdAndUpdate(
+      job.hiredProvider._id,
+      {
+        availableBalance: newAvailableBalance,
+        totalEarnings: newTotalEarnings,
       },
+      { new: true }
+    )
+
+    if (!updatedProvider) {
+      throw new Error("Failed to update provider balance")
+    }
+
+    console.log(`Provider ${job.hiredProvider._id} balance updated:`, {
+      previousBalance: provider.availableBalance || 0,
+      newBalance: updatedProvider.availableBalance,
+      amountAdded: providerAmount
     })
 
     return {
       success: true,
       transaction,
       job,
+      providerAmount,
+      newProviderBalance: updatedProvider.availableBalance
     }
   } catch (error) {
     console.error("Payment release error:", error)

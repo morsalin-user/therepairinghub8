@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { Loader2, DollarSign, CreditCard, TrendingUp, ArrowDownToLine, Wallet } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/auth-context"
-import { paymentAPI } from "@/lib/api"
 import { useTranslation } from "@/lib/i18n"
 
 export default function FinancialDashboard() {
@@ -73,6 +72,10 @@ export default function FinancialDashboard() {
   }
 
   const handleWithdraw = async () => {
+    console.log('=== WITHDRAWAL FRONTEND DEBUG ===')
+    console.log('withdrawAmount:', withdrawAmount)
+    console.log('withdrawPaypalEmail:', withdrawPaypalEmail)
+    
     if (!withdrawAmount || isNaN(withdrawAmount) || Number.parseFloat(withdrawAmount) <= 0) {
       toast({
         title: t("financialDashboard.invalidAmount"),
@@ -100,6 +103,7 @@ export default function FinancialDashboard() {
     }
     setIsWithdrawing(true)
     try {
+      // Update user's PayPal email if it's different
       if (withdrawPaypalEmail !== user?.paypalEmail) {
         await fetch(`/api/users/${user._id}`, {
           method: "PUT",
@@ -110,7 +114,27 @@ export default function FinancialDashboard() {
           body: JSON.stringify({ paypalEmail: withdrawPaypalEmail }),
         })
       }
-      const result = await paymentAPI.processWithdrawal(amount)
+
+      // Process withdrawal - FIXED: Send paypalEmail instead of withdrawPaypalEmail
+      const withdrawalData = {
+        amount: amount,
+        paypalEmail: withdrawPaypalEmail // This was the issue!
+      }
+      
+      console.log('Sending withdrawal data:', withdrawalData)
+      
+      const response = await fetch('/api/payments/withdraw', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+        },
+        body: JSON.stringify(withdrawalData)
+      })
+      
+      const result = await response.json()
+      console.log('Withdrawal response:', result)
+      
       if (result.success) {
         toast({
           title: t("financialDashboard.withdrawalInitiated"),
@@ -130,6 +154,7 @@ export default function FinancialDashboard() {
         })
       }
     } catch (error) {
+      console.error('Withdrawal error:', error)
       toast({
         title: t("financialDashboard.withdrawalFailed"),
         description: t("financialDashboard.withdrawalProcessingProblem"),
