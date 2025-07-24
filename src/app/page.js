@@ -1,5 +1,7 @@
 "use client"
 
+// Yes code has been uploaded!
+
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { CheckCircle, Users, Shield, Star, ArrowRight } from "lucide-react"
