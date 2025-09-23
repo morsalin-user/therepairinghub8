@@ -240,53 +240,55 @@ export default function Documentation() {
 
           {/* Providers Tab */}
           <TabsContent value="providers">
-            <Card>
-              <CardHeader>
-                <CardTitle className="break-words">{t("documentationPage.forServiceProviders")}</CardTitle>
-                <CardDescription className="break-words">
+            <Card className="bg-white border border-gray-200 shadow-sm">
+              <CardHeader className="bg-gradient-to-r from-[#1E3A8A] to-[#60A5FA] text-white rounded-t-lg">
+                <CardTitle className="break-words text-white">{t("documentationPage.forServiceProviders")}</CardTitle>
+                <CardDescription className="break-words text-blue-100">
                   {t("documentationPage.forServiceProvidersDescription")}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 p-6">
                 <section>
-                  <h2 className="text-2xl font-semibold mb-4 break-words">{t("documentationPage.findingJobs")}</h2>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 break-words">
-                    {t("documentationPage.findingJobsDescription")}
-                  </p>
-                  <ul className="space-y-3 text-gray-600 dark:text-gray-300">
+                  <h2 className="text-2xl font-semibold mb-4 break-words text-[#1E3A8A]">
+                    {t("documentationPage.findingJobs")}
+                  </h2>
+                  <p className="text-[#22304A] mb-4 break-words">{t("documentationPage.findingJobsDescription")}</p>
+                  <ul className="space-y-3 text-[#22304A]">
                     <li className="flex items-start break-words">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <Check className="h-5 w-5 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" />
                       <span>
-                        <strong>{t("documentationPage.browseJobs")}</strong>
+                        <strong className="text-[#1E3A8A]">{t("documentationPage.browseJobs")}</strong>
                       </span>
                     </li>
                     <li className="flex items-start break-words">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <Check className="h-5 w-5 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" />
                       <span>
-                        <strong>{t("documentationPage.useFilters")}</strong>
+                        <strong className="text-[#1E3A8A]">{t("documentationPage.useFilters")}</strong>
                       </span>
                     </li>
                     <li className="flex items-start break-words">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <Check className="h-5 w-5 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" />
                       <span>
-                        <strong>{t("documentationPage.search")}</strong>
+                        <strong className="text-[#1E3A8A]">{t("documentationPage.search")}</strong>
                       </span>
                     </li>
                     <li className="flex items-start break-words">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <Check className="h-5 w-5 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" />
                       <span>
-                        <strong>{t("documentationPage.enableNotifications")}</strong>
+                        <strong className="text-[#1E3A8A]">{t("documentationPage.enableNotifications")}</strong>
                       </span>
                     </li>
                   </ul>
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-semibold mb-4 break-words">{t("documentationPage.submittingQuotes")}</h2>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 break-words">
+                  <h2 className="text-2xl font-semibold mb-4 break-words text-[#1E3A8A]">
+                    {t("documentationPage.submittingQuotes")}
+                  </h2>
+                  <p className="text-[#22304A] mb-4 break-words">
                     {t("documentationPage.submittingQuotesDescription")}
                   </p>
-                  <ol className="list-decimal pl-6 space-y-2 text-gray-600 dark:text-gray-300">
+                  <ol className="list-decimal pl-6 space-y-2 text-[#22304A]">
                     {getTranslationArray("documentationPage.submittingQuotesSteps").map((step, index) => (
                       <li key={index} className="break-words">
                         {step}
@@ -296,29 +298,27 @@ export default function Documentation() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-semibold mb-4 break-words">{t("documentationPage.gettingHired")}</h2>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 break-words">
-                    {t("documentationPage.gettingHiredDescription")}
-                  </p>
-                  <ul className="space-y-3 text-gray-600 dark:text-gray-300">
+                  <h2 className="text-2xl font-semibold mb-4 break-words text-[#1E3A8A]">
+                    {t("documentationPage.gettingHired")}
+                  </h2>
+                  <p className="text-[#22304A] mb-4 break-words">{t("documentationPage.gettingHiredDescription")}</p>
+                  <ul className="space-y-3 text-[#22304A]">
                     {getTranslationArray("documentationPage.gettingHiredSteps").map((step, index) => (
                       <li key={index} className="flex items-start break-words">
-                        <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <Check className="h-5 w-5 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" />
                         <span>{step}</span>
                       </li>
                     ))}
                   </ul>
-                  <p className="text-gray-600 dark:text-gray-300 mt-4 break-words">
-                    {t("documentationPage.gettingHiredAdditionalInfo")}
-                  </p>
+                  <p className="text-[#22304A] mt-4 break-words">{t("documentationPage.gettingHiredAdditionalInfo")}</p>
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-semibold mb-4 break-words">{t("documentationPage.gettingPaid")}</h2>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 break-words">
-                    {t("documentationPage.gettingPaidDescription")}
-                  </p>
-                  <ol className="list-decimal pl-6 space-y-2 text-gray-600 dark:text-gray-300">
+                  <h2 className="text-2xl font-semibold mb-4 break-words text-[#1E3A8A]">
+                    {t("documentationPage.gettingPaid")}
+                  </h2>
+                  <p className="text-[#22304A] mb-4 break-words">{t("documentationPage.gettingPaidDescription")}</p>
+                  <ol className="list-decimal pl-6 space-y-2 text-[#22304A]">
                     {getTranslationArray("documentationPage.gettingPaidSteps").map((step, index) => (
                       <li key={index} className="break-words">
                         {step}
@@ -327,13 +327,11 @@ export default function Documentation() {
                   </ol>
                 </section>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start">
-                  <Info className="h-5 w-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" />
+                <div className="bg-blue-50 border border-[#38BDF8] rounded-lg p-4 flex items-start">
+                  <Info className="h-5 w-5 text-[#38BDF8] mr-3 mt-0.5 flex-shrink-0" />
                   <div>
-                    <h3 className="font-medium text-blue-800 dark:text-blue-300 break-words">
-                      {t("documentationPage.proTip")}
-                    </h3>
-                    <p className="text-blue-700 dark:text-blue-400 text-sm mt-1 break-words">
+                    <h3 className="font-medium text-[#1E3A8A] break-words">{t("documentationPage.proTip")}</h3>
+                    <p className="text-[#22304A] text-sm mt-1 break-words">
                       {t("documentationPage.proTipDescription")}
                     </p>
                   </div>
@@ -344,109 +342,109 @@ export default function Documentation() {
 
           {/* Payments Tab */}
           <TabsContent value="payments">
-            <Card>
-              <CardHeader>
-                <CardTitle className="break-words">{t("documentationPage.paymentsAndSecurity")}</CardTitle>
-                <CardDescription className="break-words">
+            <Card className="bg-white border border-gray-200 shadow-sm">
+              <CardHeader className="bg-gradient-to-r from-[#1E3A8A] to-[#60A5FA] text-white rounded-t-lg">
+                <CardTitle className="break-words text-white">{t("documentationPage.paymentsAndSecurity")}</CardTitle>
+                <CardDescription className="break-words text-blue-100">
                   {t("documentationPage.paymentsAndSecurityDescription")}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 p-6">
                 <section>
-                  <h2 className="text-2xl font-semibold mb-4 break-words">{t("documentationPage.howPaymentsWork")}</h2>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 break-words">
-                    {t("documentationPage.howPaymentsWorkDescription")}
-                  </p>
-                  <ol className="list-decimal pl-6 space-y-2 text-gray-600 dark:text-gray-300">
+                  <h2 className="text-2xl font-semibold mb-4 break-words text-[#1E3A8A]">
+                    {t("documentationPage.howPaymentsWork")}
+                  </h2>
+                  <p className="text-[#22304A] mb-4 break-words">{t("documentationPage.howPaymentsWorkDescription")}</p>
+                  <ol className="list-decimal pl-6 space-y-2 text-[#22304A]">
                     <li className="break-words">
-                      <strong>{t("documentationPage.jobPosting")}</strong>
+                      <strong className="text-[#1E3A8A]">{t("documentationPage.jobPosting")}</strong>
                     </li>
                     <li className="break-words">
-                      <strong>{t("documentationPage.escrow")}</strong>
+                      <strong className="text-[#1E3A8A]">{t("documentationPage.escrow")}</strong>
                     </li>
                     <li className="break-words">
-                      <strong>{t("documentationPage.hiring")}</strong>
+                      <strong className="text-[#1E3A8A]">{t("documentationPage.hiring")}</strong>
                     </li>
                     <li className="break-words">
-                      <strong>{t("documentationPage.completion")}</strong>
+                      <strong className="text-[#1E3A8A]">{t("documentationPage.completion")}</strong>
                     </li>
                     <li className="break-words">
-                      <strong>{t("documentationPage.platformFee")}</strong>
+                      <strong className="text-[#1E3A8A]">{t("documentationPage.platformFee")}</strong>
                     </li>
                   </ol>
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-semibold mb-4 break-words">{t("documentationPage.paymentMethods")}</h2>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 break-words">
-                    {t("documentationPage.paymentMethodsDescription")}
-                  </p>
-                  <ul className="space-y-3 text-gray-600 dark:text-gray-300">
+                  <h2 className="text-2xl font-semibold mb-4 break-words text-[#1E3A8A]">
+                    {t("documentationPage.paymentMethods")}
+                  </h2>
+                  <p className="text-[#22304A] mb-4 break-words">{t("documentationPage.paymentMethodsDescription")}</p>
+                  <ul className="space-y-3 text-[#22304A]">
                     <li className="flex items-start break-words">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <Check className="h-5 w-5 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" />
                       <span>
-                        <strong>{t("documentationPage.creditDebitCards")}</strong>
+                        <strong className="text-[#1E3A8A]">{t("documentationPage.creditDebitCards")}</strong>
                       </span>
                     </li>
                     <li className="flex items-start break-words">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <Check className="h-5 w-5 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" />
                       <span>
-                        <strong>{t("documentationPage.payPal")}</strong>
+                        <strong className="text-[#1E3A8A]">{t("documentationPage.payPal")}</strong>
                       </span>
                     </li>
                   </ul>
-                  <p className="text-gray-600 dark:text-gray-300 mt-4 break-words">
-                    {t("documentationPage.withdrawalsInfo")}
-                  </p>
+                  <p className="text-[#22304A] mt-4 break-words">{t("documentationPage.withdrawalsInfo")}</p>
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-semibold mb-4 break-words">{t("documentationPage.securityMeasures")}</h2>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 break-words">
+                  <h2 className="text-2xl font-semibold mb-4 break-words text-[#1E3A8A]">
+                    {t("documentationPage.securityMeasures")}
+                  </h2>
+                  <p className="text-[#22304A] mb-4 break-words">
                     {t("documentationPage.securityMeasuresDescription")}
                   </p>
-                  <ul className="space-y-3 text-gray-600 dark:text-gray-300">
+                  <ul className="space-y-3 text-[#22304A]">
                     <li className="flex items-start break-words">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <Check className="h-5 w-5 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" />
                       <span>
-                        <strong>{t("documentationPage.securePayments")}</strong>
+                        <strong className="text-[#1E3A8A]">{t("documentationPage.securePayments")}</strong>
                       </span>
                     </li>
                     <li className="flex items-start break-words">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <Check className="h-5 w-5 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" />
                       <span>
-                        <strong>{t("documentationPage.escrowSystem")}</strong>
+                        <strong className="text-[#1E3A8A]">{t("documentationPage.escrowSystem")}</strong>
                       </span>
                     </li>
                     <li className="flex items-start break-words">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <Check className="h-5 w-5 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" />
                       <span>
-                        <strong>{t("documentationPage.userVerification")}</strong>
+                        <strong className="text-[#1E3A8A]">{t("documentationPage.userVerification")}</strong>
                       </span>
                     </li>
                     <li className="flex items-start break-words">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <Check className="h-5 w-5 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" />
                       <span>
-                        <strong>{t("documentationPage.ratingsReviews")}</strong>
+                        <strong className="text-[#1E3A8A]">{t("documentationPage.ratingsReviews")}</strong>
                       </span>
                     </li>
                     <li className="flex items-start break-words">
-                      <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                      <Check className="h-5 w-5 text-[#10B981] mr-2 mt-0.5 flex-shrink-0" />
                       <span>
-                        <strong>{t("documentationPage.secureMessaging")}</strong>
+                        <strong className="text-[#1E3A8A]">{t("documentationPage.secureMessaging")}</strong>
                       </span>
                     </li>
                   </ul>
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-semibold mb-4 break-words">
+                  <h2 className="text-2xl font-semibold mb-4 break-words text-[#1E3A8A]">
                     {t("documentationPage.disputeResolution")}
                   </h2>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 break-words">
+                  <p className="text-[#22304A] mb-4 break-words">
                     {t("documentationPage.disputeResolutionDescription")}
                   </p>
-                  <ol className="list-decimal pl-6 space-y-2 text-gray-600 dark:text-gray-300">
+                  <ol className="list-decimal pl-6 space-y-2 text-[#22304A]">
                     {getTranslationArray("documentationPage.disputeResolutionSteps").map((step, index) => (
                       <li key={index} className="break-words">
                         {step}
@@ -455,13 +453,13 @@ export default function Documentation() {
                   </ol>
                 </section>
 
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 flex items-start">
-                  <AlertTriangle className="h-5 w-5 text-yellow-500 mr-3 mt-0.5 flex-shrink-0" />
+                <div className="bg-orange-50 border border-[#F59E42] rounded-lg p-4 flex items-start">
+                  <AlertTriangle className="h-5 w-5 text-[#F59E42] mr-3 mt-0.5 flex-shrink-0" />
                   <div>
-                    <h3 className="font-medium text-yellow-800 dark:text-yellow-300 break-words">
+                    <h3 className="font-medium text-[#1E3A8A] break-words">
                       {t("documentationPage.importantSecurityNotice")}
                     </h3>
-                    <p className="text-yellow-700 dark:text-yellow-400 text-sm mt-1 break-words">
+                    <p className="text-[#22304A] text-sm mt-1 break-words">
                       {t("documentationPage.importantSecurityNoticeDescription")}
                     </p>
                   </div>
