@@ -216,6 +216,7 @@
     "register": {
       "title": "Neues Konto erstellen",
       "subtitle": "Treten Sie RepairingHub bei",
+      "name": "Name",
       "firstName": "Vorname",
       "lastName": "Nachname",
       "email": "E-Mail-Adresse",
