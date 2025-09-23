@@ -205,21 +205,21 @@ export default function Register() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">{t("auth.register.name")}</Label>
-              <Input id="name" placeholder={t("auth.register.firstNamePlaceholder")} {...form.register("name")} />
+
               {form.formState.errors.name && (
                 <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
               )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">{t("auth.register.email")}</Label>
-              <Input id="email" type="email" placeholder={t("auth.register.emailPlaceholder")} {...form.register("email")} />
+
               {form.formState.errors.email && (
                 <p className="text-sm text-red-500">{form.formState.errors.email.message}</p>
               )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">{t("auth.register.phone")}</Label>
-              <Input id="phone" placeholder={t("auth.register.phonePlaceholder")} {...form.register("phone")} />
+
               {form.formState.errors.phone && (
                 <p className="text-sm text-red-500">{form.formState.errors.phone.message}</p>
               )}
@@ -228,7 +228,7 @@ export default function Register() {
               <Label htmlFor="userType">{t("auth.register.userType")}</Label>
               <Select onValueChange={(value) => form.setValue("userType", value)}>
                 <SelectTrigger id="userType">
-                  <SelectValue placeholder={t("auth.register.selectUserType")} />
+
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Buyer">{t("auth.register.buyer")}</SelectItem>
