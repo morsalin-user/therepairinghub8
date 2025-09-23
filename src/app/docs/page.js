@@ -22,14 +22,34 @@ export default function Documentation() {
           <p className="text-xl text-gray-600 dark:text-gray-300">{t("documentationPage.subtitle")}</p>
         </div>
         <Tabs defaultValue="getting-started">
-          <div className="flex justify-center mb-6">
-            <TabsList>
-              <TabsTrigger value="getting-started">{t("documentationPage.gettingStarted")}</TabsTrigger>
-              <TabsTrigger value="customers">{t("documentationPage.forCustomers")}</TabsTrigger>
-              <TabsTrigger value="providers">{t("documentationPage.forServiceProviders")}</TabsTrigger>
-              <TabsTrigger value="payments">{t("documentationPage.paymentsAndSecurity")}</TabsTrigger>
-            </TabsList>
-          </div>
+    <div className="flex justify-center mb-6">
+  <TabsList className="flex flex-wrap gap-2">
+    <TabsTrigger
+      value="getting-started"
+      className="whitespace-nowrap"
+    >
+      {t("documentationPage.gettingStarted")}
+    </TabsTrigger>
+    <TabsTrigger
+      value="customers"
+      className="whitespace-nowrap"
+    >
+      {t("documentationPage.forCustomers")}
+    </TabsTrigger>
+    <TabsTrigger
+      value="providers"
+      className="whitespace-nowrap"
+    >
+      {t("documentationPage.forServiceProviders")}
+    </TabsTrigger>
+    <TabsTrigger
+      value="payments"
+      className="whitespace-nowrap"
+    >
+      {t("documentationPage.paymentsAndSecurity")}
+    </TabsTrigger>
+  </TabsList>
+</div>
           <TabsContent value="getting-started">
             <Card>
               <CardHeader>
