@@ -220,6 +220,7 @@
       "firstName": "Vorname",
       "lastName": "Nachname",
       "email": "E-Mail-Adresse",
+      "phone": "Telefon",
       "password": "Passwort",
       "confirmPassword": "Passwort bestätigen",
       "userType": "Kontotyp",
