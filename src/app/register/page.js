@@ -204,7 +204,7 @@ export default function Register() {
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">{t("auth.register.firstName")}</Label>
+              <Label htmlFor="name">{t("auth.register.name")}</Label>
               <Input id="name" placeholder={t("auth.register.firstNamePlaceholder")} {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
