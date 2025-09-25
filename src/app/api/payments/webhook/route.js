@@ -138,7 +138,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
     }
 
     // Set escrow end date (use environment variable or default to 10 days)
-    const escrowPeriodMinutes = Number.parseInt(process.env.ESCROW_PERIOD_MINUTES || "14400", 10) // 14400 minutes = 10 days
+    const escrowPeriodMinutes = Number.parseInt(process.env.ESCROW_PERIOD_MINUTES || "1", 10) // 14400 minutes = 10 days
     const escrowEndDate = new Date(Date.now() + escrowPeriodMinutes * 60 * 1000)
 
     // Update job status
