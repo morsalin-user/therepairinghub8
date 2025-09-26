@@ -19,13 +19,18 @@ export async function POST(req) {
     }
 
     // Find jobs that are in progress with payment in escrow for more than 10 days
-    const tenDaysAgo = new Date()
-    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10)
+    // const tenDaysAgo = new Date()
+    // tenDaysAgo.setDate(tenDaysAgo.getDate() - 10)
+
+    const oneMinuteAgo = new Date();
+oneMinuteAgo.setMinutes(oneMinuteAgo.getMinutes() - 1);
+
 
     const jobs = await Job.find({
       status: "in_progress",
       paymentStatus: "in_escrow",
-      updatedAt: { $lt: tenDaysAgo },
+      // updatedAt: { $lt: tenDaysAgo },
+      updatedAt: { $lt: oneMinuteAgo },
     }).populate("postedBy hiredProvider")
 
     const results = []
