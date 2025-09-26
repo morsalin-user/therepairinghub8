@@ -129,51 +129,51 @@ export default function JobDetails({ params }) {
     }
   }, [messages])
 
-  // const handleTimerComplete = async () => {
-  //   if (job?.status === "in_progress") {
-  //     try {
-  //       const { success, job: updatedJob } = await jobAPI.completeJob(job._id)
-  //       if (success) {
-  //         dispatch(updateJob(updatedJob))
-  //         toast({
-  //           title: t("jobDetailsPage.jobCompletedAutomatically"),
-  //           description: t("jobDetailsPage.escrowPeriodEnded"),
-  //         })
-  //       }
-  //     } catch (error) {
-  //       console.error("Auto-complete error:", error)
-  //     }
-  //   }
-  // }
-
   const handleTimerComplete = async () => {
     if (job?.status === "in_progress") {
       try {
-        console.log("Attempting to complete job:", job._id);
-        // ✅ Use the actual job ID instead of hardcoded one
-        const { success, job: updatedJob } = await jobAPI.completeJob(job._id);
+        const { success, job: updatedJob } = await jobAPI.completeJob(job._id)
         if (success) {
-          console.log("Job completed successfully:", updatedJob);
-          dispatch(updateJob(updatedJob));
+          dispatch(updateJob(updatedJob))
           toast({
             title: t("jobDetailsPage.jobCompletedAutomatically"),
             description: t("jobDetailsPage.escrowPeriodEnded"),
-          });
-        } else {
-          console.error("Failed to complete job: API call was not successful");
+          })
         }
       } catch (error) {
-        console.error("Auto-complete error:", error);
-        toast({
-          title: t("jobDetailsPage.autoCompleteFailed"),
-          description: t("jobDetailsPage.problemAutoCompletingJob"),
-          variant: "destructive",
-        });
+        console.error("Auto-complete error:", error)
       }
-    } else {
-      console.log("Job status is not 'in_progress', so it cannot be auto-completed.");
     }
-  };
+  }
+
+  // const handleTimerComplete = async () => {
+  //   if (job?.status === "in_progress") {
+  //     try {
+  //       console.log("Attempting to complete job:", job._id);
+  //       // ✅ Use the actual job ID instead of hardcoded one
+  //       const { success, job: updatedJob } = await jobAPI.completeJob(job._id);
+  //       if (success) {
+  //         console.log("Job completed successfully:", updatedJob);
+  //         dispatch(updateJob(updatedJob));
+  //         toast({
+  //           title: t("jobDetailsPage.jobCompletedAutomatically"),
+  //           description: t("jobDetailsPage.escrowPeriodEnded"),
+  //         });
+  //       } else {
+  //         console.error("Failed to complete job: API call was not successful");
+  //       }
+  //     } catch (error) {
+  //       console.error("Auto-complete error:", error);
+  //       toast({
+  //         title: t("jobDetailsPage.autoCompleteFailed"),
+  //         description: t("jobDetailsPage.problemAutoCompletingJob"),
+  //         variant: "destructive",
+  //       });
+  //     }
+  //   } else {
+  //     console.log("Job status is not 'in_progress', so it cannot be auto-completed.");
+  //   }
+  // };
 
 
   const handleSubmitReview = async () => {
