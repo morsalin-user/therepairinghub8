@@ -92,17 +92,6 @@ export default function Jobs() {
     setLocation("")
   }
 
-  // Simple, safe date formatting function
-  const formatJobDate = (job) => {
-    if (!job || typeof job !== 'object') return "Flexible"
-    
-    const dateValue = job.date || job.deadline
-    if (!dateValue) return "Flexible"
-    
-    const date = new Date(dateValue)
-    return isNaN(date.getTime()) ? "Flexible" : date.toLocaleDateString()
-  }
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -170,7 +159,6 @@ export default function Jobs() {
             </Button>
           </CardContent>
         </Card>
-
         {/* Job Listings */}
         <div className="flex-1">
           <div className="mb-6">
@@ -195,7 +183,6 @@ export default function Jobs() {
               <p className="text-gray-500">{t("jobsPage.jobsFound", { count: filteredJobs.length })}</p>
             </div>
           </div>
-
           {filteredJobs.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredJobs.map((job) => (
@@ -203,9 +190,9 @@ export default function Jobs() {
                   key={job._id}
                   id={job._id}
                   title={job.title}
-                  price={`${job.price}`}
+                  price={`$${job.price}`}
                   location={job.location}
-                  date={formatDeadline(job)}
+                  date={new Date(job.date).toLocaleDateString()}
                   category={job.category}
                 />
               ))}
