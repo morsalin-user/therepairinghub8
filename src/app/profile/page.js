@@ -60,7 +60,6 @@ export default function ProfilePage() {
 
   const fetchUserReviews = async () => {
     if (!user?._id) return
-
     setReviewsLoading(true)
     try {
       const { success, reviews } = await reviewAPI.getReviews({ user: user._id })
@@ -77,7 +76,7 @@ export default function ProfilePage() {
 
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <Star key={i} className={`h-4 w-4 ${i < rating ? "text-yellow-400 fill-current" : "text-gray-300"}`} />
+      <Star key={i} className={`h-4 w-4 ${i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
     ))
   }
 
@@ -155,59 +154,101 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#10B981]" />
       </div>
     )
   }
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">{t("profilePage.title")}</h1>
+      <h1 className="text-3xl font-bold text-[#22304A] mb-6">{t("profilePage.title")}</h1>
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="profile">{t("profilePage.profileInformation")}</TabsTrigger>
-          <TabsTrigger value="reviews">{t("profilePage.myReviews")}</TabsTrigger>
-          <TabsTrigger value="account">{t("profilePage.accountSettings")}</TabsTrigger>
-          <TabsTrigger value="payment">{t("profilePage.paymentSettings")}</TabsTrigger>
-          <TabsTrigger value="finance">{t("profilePage.financialDashboard")}</TabsTrigger>
+        <TabsList className="mb-6 bg-[#F3F4F6] rounded-lg p-1">
+          <TabsTrigger
+            value="profile"
+            className="data-[state=active]:bg-white data-[state=active]:text-[#10B981] data-[state=active]:shadow-sm"
+          >
+            {t("profilePage.profileInformation")}
+          </TabsTrigger>
+          <TabsTrigger
+            value="reviews"
+            className="data-[state=active]:bg-white data-[state=active]:text-[#10B981] data-[state=active]:shadow-sm"
+          >
+            {t("profilePage.myReviews")}
+          </TabsTrigger>
+          <TabsTrigger
+            value="account"
+            className="data-[state=active]:bg-white data-[state=active]:text-[#10B981] data-[state=active]:shadow-sm"
+          >
+            {t("profilePage.accountSettings")}
+          </TabsTrigger>
+          <TabsTrigger
+            value="payment"
+            className="data-[state=active]:bg-white data-[state=active]:text-[#10B981] data-[state=active]:shadow-sm"
+          >
+            {t("profilePage.paymentSettings")}
+          </TabsTrigger>
+          <TabsTrigger
+            value="finance"
+            className="data-[state=active]:bg-white data-[state=active]:text-[#10B981] data-[state=active]:shadow-sm"
+          >
+            {t("profilePage.financialDashboard")}
+          </TabsTrigger>
         </TabsList>
+
         <form onSubmit={handleSubmit(onSubmit)}>
           <TabsContent value="profile">
             <Card>
               <CardHeader>
-                <CardTitle>{t("profilePage.profileInformation")}</CardTitle>
-                <CardDescription>{t("profilePage.profileDescription")}</CardDescription>
+                <CardTitle className="text-[#22304A]">{t("profilePage.profileInformation")}</CardTitle>
+                <CardDescription className="text-[#6B7280]">
+                  {t("profilePage.profileDescription")}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex flex-col items-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={avatarPreview || "/placeholder.svg?height=96&width=96"} alt={user?.name} />
-                    <AvatarFallback>
+                    <AvatarImage
+                      src={avatarPreview || "/placeholder.svg?height=96&width=96"}
+                      alt={user?.name}
+                    />
+                    <AvatarFallback className="bg-[#10B981] text-white">
                       <UserIcon className="h-12 w-12" />
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <Label htmlFor="avatar" className="block mb-2">
+                    <Label htmlFor="avatar" className="block mb-2 text-[#22304A]">
                       {t("profilePage.profilePicture")}
                     </Label>
-                    <Input id="avatar" type="file" accept="image/*" onChange={handleAvatarChange} />
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <Input
+                      id="avatar"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
+                    />
+                    <p className="text-sm text-[#6B7280] mt-1">
                       {t("profilePage.profilePictureRecommendation")}
                     </p>
                   </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="name">{t("profilePage.fullName")}</Label>
+                    <Label htmlFor="name" className="text-[#22304A]">
+                      {t("profilePage.fullName")}
+                    </Label>
                     <Input
                       id="name"
                       {...register("name", { required: t("messages.validation.required") })}
                       placeholder={t("profilePage.fullNamePlaceholder")}
+                      className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                     />
                     {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">{t("profilePage.emailAddress")}</Label>
+                    <Label htmlFor="email" className="text-[#22304A]">
+                      {t("profilePage.emailAddress")}
+                    </Label>
                     <Input
                       id="email"
                       type="email"
@@ -220,36 +261,64 @@ export default function ProfilePage() {
                       })}
                       placeholder={t("profilePage.emailPlaceholder")}
                       disabled
+                      className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                     />
                     {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">{t("profilePage.phoneNumber")}</Label>
-                    <Input id="phone" {...register("phone")} placeholder={t("profilePage.phonePlaceholder")} />
+                    <Label htmlFor="phone" className="text-[#22304A]">
+                      {t("profilePage.phoneNumber")}
+                    </Label>
+                    <Input
+                      id="phone"
+                      {...register("phone")}
+                      placeholder={t("profilePage.phonePlaceholder")}
+                      className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="address">{t("profilePage.address")}</Label>
-                    <Input id="address" {...register("address")} placeholder={t("profilePage.addressPlaceholder")} />
+                    <Label htmlFor="address" className="text-[#22304A]">
+                      {t("profilePage.address")}
+                    </Label>
+                    <Input
+                      id="address"
+                      {...register("address")}
+                      placeholder={t("profilePage.addressPlaceholder")}
+                      className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="bio">{t("profilePage.bio")}</Label>
+                  <Label htmlFor="bio" className="text-[#22304A]">
+                    {t("profilePage.bio")}
+                  </Label>
                   <Textarea
                     id="bio"
                     {...register("bio")}
                     placeholder={t("profilePage.bioPlaceholder")}
-                    className="min-h-[100px]"
+                    className="min-h-[100px] border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                   />
                 </div>
                 {user?.userType === "Seller" && (
                   <div className="space-y-2">
-                    <Label htmlFor="skills">{t("profilePage.skills")}</Label>
-                    <Input id="skills" {...register("skills")} placeholder={t("profilePage.skillsPlaceholder")} />
+                    <Label htmlFor="skills" className="text-[#22304A]">
+                      {t("profilePage.skills")}
+                    </Label>
+                    <Input
+                      id="skills"
+                      {...register("skills")}
+                      placeholder={t("profilePage.skillsPlaceholder")}
+                      className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
+                    />
                   </div>
                 )}
               </CardContent>
               <CardFooter className="flex justify-end">
-                <Button type="submit" disabled={isUpdating}>
+                <Button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="bg-[#10B981] hover:bg-[#0D9468] text-white"
+                >
                   {isUpdating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -265,38 +334,44 @@ export default function ProfilePage() {
               </CardFooter>
             </Card>
           </TabsContent>
+
           <TabsContent value="reviews">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center justify-between text-[#22304A]">
                   <span>
                     {t("profilePage.myReviews")} ({reviews.length})
                   </span>
                   {user?.rating && (
                     <div className="flex items-center space-x-2">
                       <div className="flex items-center space-x-1">{renderStars(Math.round(user.rating))}</div>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-[#6B7280]">
                         {user.rating.toFixed(1)} ({user.reviewCount || 0} {t("profilePage.reviews")})
                       </span>
                     </div>
                   )}
                 </CardTitle>
-                <CardDescription>{t("profilePage.reviewsDescription")}</CardDescription>
+                <CardDescription className="text-[#6B7280]">
+                  {t("profilePage.reviewsDescription")}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {reviewsLoading ? (
                   <div className="flex justify-center items-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <Loader2 className="h-6 w-6 animate-spin text-[#10B981]" />
                   </div>
                 ) : reviews.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-muted-foreground">{t("profilePage.noReviewsReceived")}</p>
-                    <p className="text-sm text-muted-foreground mt-2">{t("profilePage.reviewsWillAppearHere")}</p>
+                    <p className="text-[#6B7280]">{t("profilePage.noReviewsReceived")}</p>
+                    <p className="text-sm text-[#6B7280] mt-2">{t("profilePage.reviewsWillAppearHere")}</p>
                   </div>
                 ) : (
                   <div className="space-y-6">
                     {reviews.map((review) => (
-                      <div key={review._id} className="border rounded-lg p-4">
+                      <div
+                        key={review._id}
+                        className="border border-[#E5E7EB] rounded-lg p-4 hover:shadow-sm transition-shadow"
+                      >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center">
                             <Avatar className="h-10 w-10 mr-3">
@@ -304,7 +379,7 @@ export default function ProfilePage() {
                                 src={review.reviewer.avatar || "/placeholder.svg?height=40&width=40"}
                                 alt={review.reviewer.name}
                               />
-                              <AvatarFallback>
+                              <AvatarFallback className="bg-[#10B981] text-white">
                                 {review.reviewer.name
                                   ? review.reviewer.name
                                       .split(" ")
@@ -314,19 +389,19 @@ export default function ProfilePage() {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium">{review.reviewer.name}</p>
+                              <p className="font-medium text-[#22304A]">{review.reviewer.name}</p>
                               <div className="flex items-center">
-                                {renderStars(review.rating)}
-                                <span className="ml-2 text-sm text-muted-foreground">
+                                <div className="flex">{renderStars(review.rating)}</div>
+                                <span className="ml-2 text-sm text-[#6B7280]">
                                   {new Date(review.createdAt).toLocaleDateString()}
                                 </span>
                               </div>
                             </div>
                           </div>
                         </div>
-                        <p className="text-foreground">{review.comment}</p>
+                        <p className="text-[#22304A]">{review.comment}</p>
                         {review.job && (
-                          <p className="text-xs text-muted-foreground mt-2">
+                          <p className="text-xs text-[#6B7280] mt-2">
                             {t("profilePage.reviewForJob")}: {review.job.title}
                           </p>
                         )}
@@ -337,24 +412,32 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
           </TabsContent>
+
           <TabsContent value="account">
             <Card>
               <CardHeader>
-                <CardTitle>{t("profilePage.accountSettings")}</CardTitle>
-                <CardDescription>{t("profilePage.accountDescription")}</CardDescription>
+                <CardTitle className="text-[#22304A]">{t("profilePage.accountSettings")}</CardTitle>
+                <CardDescription className="text-[#6B7280]">
+                  {t("profilePage.accountDescription")}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="current-password">{t("profilePage.currentPassword")}</Label>
+                  <Label htmlFor="current-password" className="text-[#22304A]">
+                    {t("profilePage.currentPassword")}
+                  </Label>
                   <Input
                     id="current-password"
                     type="password"
                     {...register("currentPassword")}
                     placeholder={t("profilePage.currentPasswordPlaceholder")}
+                    className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">{t("profilePage.newPassword")}</Label>
+                  <Label htmlFor="new-password" className="text-[#22304A]">
+                    {t("profilePage.newPassword")}
+                  </Label>
                   <Input
                     id="new-password"
                     type="password"
@@ -365,11 +448,14 @@ export default function ProfilePage() {
                       },
                     })}
                     placeholder={t("profilePage.newPasswordPlaceholder")}
+                    className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                   />
                   {errors.newPassword && <p className="text-sm text-red-500">{errors.newPassword.message}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">{t("profilePage.confirmNewPassword")}</Label>
+                  <Label htmlFor="confirm-password" className="text-[#22304A]">
+                    {t("profilePage.confirmNewPassword")}
+                  </Label>
                   <Input
                     id="confirm-password"
                     type="password"
@@ -381,20 +467,21 @@ export default function ProfilePage() {
                       },
                     })}
                     placeholder={t("profilePage.confirmNewPasswordPlaceholder")}
+                    className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                   />
                   {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>}
                 </div>
-                <div className="border-t pt-6">
+                <div className="border-t border-[#E5E7EB] pt-6 mt-6">
                   <div className="space-y-4">
                     <div>
                       <h3 className="text-lg font-medium text-red-600">{t("profilePage.dangerZone")}</h3>
-                      <p className="text-sm text-muted-foreground">{t("profilePage.dangerZoneDescription")}</p>
+                      <p className="text-sm text-[#6B7280]">{t("profilePage.dangerZoneDescription")}</p>
                     </div>
                     <Button
                       type="button"
                       variant="destructive"
                       onClick={() => setShowDeleteModal(true)}
-                      className="w-full sm:w-auto"
+                      className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
                     >
                       {t("profilePage.deleteMyAccount")}
                     </Button>
@@ -402,7 +489,11 @@ export default function ProfilePage() {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-end">
-                <Button type="submit" disabled={isUpdating}>
+                <Button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="bg-[#10B981] hover:bg-[#0D9468] text-white"
+                >
                   {isUpdating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -418,15 +509,20 @@ export default function ProfilePage() {
               </CardFooter>
             </Card>
           </TabsContent>
+
           <TabsContent value="payment">
             <Card>
               <CardHeader>
-                <CardTitle>{t("profilePage.paymentSettings")}</CardTitle>
-                <CardDescription>{t("profilePage.paymentDescription")}</CardDescription>
+                <CardTitle className="text-[#22304A]">{t("profilePage.paymentSettings")}</CardTitle>
+                <CardDescription className="text-[#6B7280]">
+                  {t("profilePage.paymentDescription")}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="paypal-email">{t("profilePage.paypalEmail")}</Label>
+                  <Label htmlFor="paypal-email" className="text-[#22304A]">
+                    {t("profilePage.paypalEmail")}
+                  </Label>
                   <Input
                     id="paypal-email"
                     type="email"
@@ -437,13 +533,18 @@ export default function ProfilePage() {
                       },
                     })}
                     placeholder={t("profilePage.paypalEmailPlaceholder")}
+                    className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                   />
                   {errors.paypalEmail && <p className="text-sm text-red-500">{errors.paypalEmail.message}</p>}
-                  <p className="text-sm text-muted-foreground mt-1">{t("profilePage.paypalEmailDescription")}</p>
+                  <p className="text-sm text-[#6B7280] mt-1">{t("profilePage.paypalEmailDescription")}</p>
                 </div>
               </CardContent>
               <CardFooter className="flex justify-end">
-                <Button type="submit" disabled={isUpdating}>
+                <Button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="bg-[#10B981] hover:bg-[#0D9468] text-white"
+                >
                   {isUpdating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -460,10 +561,12 @@ export default function ProfilePage() {
             </Card>
           </TabsContent>
         </form>
+
         <TabsContent value="finance">
           <FinancialDashboard />
         </TabsContent>
       </Tabs>
+
       <DeleteAccountModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
