@@ -1,31 +1,14 @@
 "use client"
-
-// Yes code has been updated with consistent color palette!
-
+// Updated with consistent color palette and removed Recent Jobs and Testimonials sections
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { CheckCircle, Users, Shield, Star, ArrowRight } from "lucide-react"
+import { CheckCircle, Users, Shield, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useTranslation } from "@/lib/i18n"
-import JobCard from "@/components/job-card"
 
 export default function HomePage() {
   const { t } = useTranslation()
-  const [recentJobs, setRecentJobs] = useState([])
-
-  useEffect(() => {
-    // Load sample jobs from translations
-    const sampleJobs = t("jobs.sampleJobs")
-    if (Array.isArray(sampleJobs)) {
-      setRecentJobs(
-        sampleJobs.map((job, index) => ({
-          id: index + 1,
-          ...job,
-        })),
-      )
-    }
-  }, [t])
 
   const howItWorksSteps = [
     {
@@ -44,8 +27,6 @@ export default function HomePage() {
       description: t("howItWorks.securePayment.description"),
     },
   ]
-
-  const testimonials = t("testimonials.items")
 
   return (
     <div className="min-h-screen">
@@ -123,75 +104,6 @@ export default function HomePage() {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Recent Jobs Section */}
-      <section className="py-20" style={{ backgroundColor: "#FFFFFF" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold" style={{ color: "#1E3A8A" }}>
-              {t("jobs.recentJobs")}
-            </h2>
-            <Link href="/jobs">
-              <Button
-                variant="outline"
-                style={{
-                  borderColor: "#10B981",
-                  color: "#10B981",
-                  backgroundColor: "transparent",
-                }}
-                className="hover:text-white transition-colors bg-transparent"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#10B981"
-                  e.currentTarget.style.color = "white"
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent"
-                  e.currentTarget.style.color = "#10B981"
-                }}
-              >
-                {t("jobs.viewAll")}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recentJobs.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-20" style={{ backgroundColor: "#F3F4F6" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: "#1E3A8A" }}>
-              {t("testimonials.title")}
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {Array.isArray(testimonials) &&
-              testimonials.map((testimonial, index) => (
-                <Card key={index} className="border-0 shadow-lg" style={{ backgroundColor: "#FFFFFF" }}>
-                  <CardContent className="p-8">
-                    <div className="flex mb-4">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="h-5 w-5 fill-current" style={{ color: "#F59E42" }} />
-                      ))}
-                    </div>
-                    <p className="mb-6 leading-relaxed" style={{ color: "#22304A" }}>
-                      "{testimonial.text}"
-                    </p>
-                    <p className="font-semibold" style={{ color: "#1E3A8A" }}>
-                      {testimonial.author}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
           </div>
         </div>
       </section>
