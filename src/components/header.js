@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -26,7 +25,6 @@ export default function Header() {
   const router = useRouter()
 
   useEffect(() => {
-    // Fetch unread notifications count
     if (user) {
       fetchUnreadCount()
     }
@@ -65,24 +63,24 @@ export default function Header() {
   ]
 
   return (
-    <header className="bg-[#1E3A8A] border-b border-white/10 sticky top-0 z-50">
+    <header className="bg-[#1E3A8A] border-b border-white/10 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+          {/* Logo - 2x bigger */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-[#10B981] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">RH</span>
+            <div className="w-12 h-12 bg-[#10B981] rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xl">RH</span>
             </div>
-            <span className="text-xl font-bold text-white">RepairingHub</span>
+            <span className="text-2xl font-bold text-white">RepairingHub</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          {/* Desktop Navigation - Centered, button-style */}
+          <nav className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-white/80 hover:text-[#38BDF8] transition-colors duration-200 font-medium"
+                className="px-4 py-2 text-white/80 hover:bg-[#10B981] hover:text-white rounded-md transition-all duration-200 font-medium"
               >
                 {item.label}
               </Link>
@@ -91,14 +89,12 @@ export default function Header() {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            {/* Language Selector - removed ModeToggle */}
             <LanguageSelector />
-
             {user ? (
               <>
-                {/* Post Job Button */}
+                {/* Post Job Button - Primary Green */}
                 <Link href="/post-job">
-                  <Button className="bg-[#10B981] hover:bg-[#38BDF8] text-white font-medium transition-colors">
+                  <Button className="bg-[#10B981] hover:bg-[#0d9468] hover:shadow-md transition-all duration-200 text-white font-medium">
                     {t("navigation.postJob")}
                   </Button>
                 </Link>
@@ -108,10 +104,7 @@ export default function Header() {
                   <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-white hover:bg-white/10">
                     <Bell className="h-4 w-4" />
                     {unreadCount > 0 && (
-                      <Badge
-                        variant="destructive"
-                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-[#F59E42] border-0"
-                      >
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-[#F59E42] border-0">
                         {unreadCount > 9 ? "9+" : unreadCount}
                       </Badge>
                     )}
@@ -175,12 +168,12 @@ export default function Header() {
             ) : (
               <div className="flex items-center space-x-3">
                 <Link href="/login">
-                  <Button variant="ghost" className="text-white hover:bg-white/10">
+                  <Button variant="ghost" className="text-white hover:bg-white/10 hover:text-[#38BDF8] transition-all duration-200">
                     {t("navigation.login")}
                   </Button>
                 </Link>
                 <Link href="/register">
-                  <Button className="bg-[#10B981] hover:bg-[#38BDF8] text-white transition-colors">
+                  <Button className="bg-[#10B981] hover:bg-[#0d9468] hover:shadow-md transition-all duration-200 text-white">
                     {t("navigation.register")}
                   </Button>
                 </Link>
@@ -207,7 +200,7 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-white/80 hover:text-[#38BDF8] transition-colors duration-200 font-medium px-2 py-1"
+                  className="px-4 py-2 text-white/80 hover:bg-[#10B981] hover:text-white rounded-md transition-all duration-200 font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}
@@ -217,14 +210,14 @@ export default function Header() {
                 <>
                   <Link
                     href="/login"
-                    className="text-white/80 hover:text-[#38BDF8] transition-colors duration-200 font-medium px-2 py-1"
+                    className="px-4 py-2 text-white/80 hover:bg-[#10B981] hover:text-white rounded-md transition-all duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {t("navigation.login")}
                   </Link>
                   <Link
                     href="/register"
-                    className="text-white/80 hover:text-[#38BDF8] transition-colors duration-200 font-medium px-2 py-1"
+                    className="px-4 py-2 text-white/80 hover:bg-[#10B981] hover:text-white rounded-md transition-all duration-200 font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {t("navigation.register")}
