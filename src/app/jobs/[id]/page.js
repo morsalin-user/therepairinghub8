@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, MapPin, Calendar, DollarSign, Clock, Upload, Send } from "lucide-react"
+import { Loader2, MapPin, Calendar, DollarSign, Clock, Upload, Send, Play } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +58,8 @@ export default function JobDetails({ params }) {
   const [activeTab, setActiveTab] = useState("quotes")
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
+
+  const [timerStarted, setTimerStarted] = useState(false)
 
   const { startMessagePolling, stopMessagePolling, subscribeToJobUpdates, sendMessage } = useRealTimeUpdates()
 
@@ -146,35 +148,21 @@ export default function JobDetails({ params }) {
     }
   }
 
-  // const handleTimerComplete = async () => {
-  //   if (job?.status === "in_progress") {
-  //     try {
-  //       console.log("Attempting to complete job:", job._id);
-  //       // ✅ Use the actual job ID instead of hardcoded one
-  //       const { success, job: updatedJob } = await jobAPI.completeJob(job._id);
-  //       if (success) {
-  //         console.log("Job completed successfully:", updatedJob);
-  //         dispatch(updateJob(updatedJob));
-  //         toast({
-  //           title: t("jobDetailsPage.jobCompletedAutomatically"),
-  //           description: t("jobDetailsPage.escrowPeriodEnded"),
-  //         });
-  //       } else {
-  //         console.error("Failed to complete job: API call was not successful");
-  //       }
-  //     } catch (error) {
-  //       console.error("Auto-complete error:", error);
-  //       toast({
-  //         title: t("jobDetailsPage.autoCompleteFailed"),
-  //         description: t("jobDetailsPage.problemAutoCompletingJob"),
-  //         variant: "destructive",
-  //       });
-  //     }
-  //   } else {
-  //     console.log("Job status is not 'in_progress', so it cannot be auto-completed.");
-  //   }
-  // };
+  const handleStartTimer = () => {
+    setTimerStarted(true)
+  }
 
+  const formatEndDate = (endDate) => {
+    const date = new Date(endDate)
+    const options = {
+      day: "numeric",
+      month: "short",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }
+    return date.toLocaleDateString("en-US", options).replace(",", ",")
+  }
 
   const handleSubmitReview = async () => {
     if (!reviewData.comment.trim()) {
@@ -251,7 +239,7 @@ export default function JobDetails({ params }) {
           setCurrentConversation({
             jobId: params.id,
             recipientId,
-          })
+          }),
         )
       }
     } catch (error) {
@@ -463,9 +451,7 @@ export default function JobDetails({ params }) {
       <div className="container py-10">
         <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <h3 className="text-xl font-medium mb-2">{t("jobDetailsPage.jobNotFound")}</h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">
-            {t("jobDetailsPage.jobDoesNotExist")}
-          </p>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">{t("jobDetailsPage.jobDoesNotExist")}</p>
           <Button asChild>
             <Link href="/jobs">{t("jobDetailsPage.browseJobs")}</Link>
           </Button>
@@ -506,35 +492,40 @@ export default function JobDetails({ params }) {
                     </div>
                   </CardDescription>
                 </div>
-                {user?.userType === "Buyer" && job.postedBy && job.postedBy._id === user?._id && job.status === "active" && (
-                  <Button
-                    variant="outline"
-                    className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-                    onClick={async () => {
-                      if (confirm(t("jobDetailsPage.areYouSureCancelJob"))) {
-                        try {
-                          const { success, job: updatedJob } = await jobAPI.updateJob(job._id, { status: "cancelled" })
-                          if (success) {
-                            dispatch(updateJob(updatedJob))
+                {user?.userType === "Buyer" &&
+                  job.postedBy &&
+                  job.postedBy._id === user?._id &&
+                  job.status === "active" && (
+                    <Button
+                      variant="outline"
+                      className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 bg-transparent"
+                      onClick={async () => {
+                        if (confirm(t("jobDetailsPage.areYouSureCancelJob"))) {
+                          try {
+                            const { success, job: updatedJob } = await jobAPI.updateJob(job._id, {
+                              status: "cancelled",
+                            })
+                            if (success) {
+                              dispatch(updateJob(updatedJob))
+                              toast({
+                                title: t("jobDetailsPage.jobCancelled"),
+                                description: t("jobDetailsPage.jobCancelledSuccessfully"),
+                              })
+                            }
+                          } catch (error) {
+                            console.error("Cancel job error:", error)
                             toast({
-                              title: t("jobDetailsPage.jobCancelled"),
-                              description: t("jobDetailsPage.jobCancelledSuccessfully"),
+                              title: t("jobDetailsPage.cancellationFailed"),
+                              description: error.response?.data?.message || t("jobDetailsPage.problemCancellingJob"),
+                              variant: "destructive",
                             })
                           }
-                        } catch (error) {
-                          console.error("Cancel job error:", error)
-                          toast({
-                            title: t("jobDetailsPage.cancellationFailed"),
-                            description: error.response?.data?.message || t("jobDetailsPage.problemCancellingJob"),
-                            variant: "destructive",
-                          })
                         }
-                      }
-                    }}
-                  >
-                    {t("jobDetailsPage.cancelJob")}
-                  </Button>
-                )}
+                      }}
+                    >
+                      {t("jobDetailsPage.cancelJob")}
+                    </Button>
+                  )}
               </div>
             </CardHeader>
             <CardContent>
@@ -555,9 +546,9 @@ export default function JobDetails({ params }) {
                         <AvatarFallback>
                           {job?.postedBy?.name
                             ? job?.postedBy?.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
                             : "U"}
                         </AvatarFallback>
                       </Avatar>
@@ -607,9 +598,9 @@ export default function JobDetails({ params }) {
                                   <AvatarFallback>
                                     {quote.provider?.name
                                       ? quote.provider.name
-                                        .split(" ")
-                                        .map((n) => n[0])
-                                        .join("")
+                                          .split(" ")
+                                          .map((n) => n[0])
+                                          .join("")
                                       : "P"}
                                   </AvatarFallback>
                                 </Avatar>
@@ -618,7 +609,8 @@ export default function JobDetails({ params }) {
                                     {quote.provider?.name || quote.provider?.email || "Provider"}
                                   </p>
                                   <p className="text-sm text-gray-500">
-                                    {new Date(quote.createdAt).toLocaleDateString()} • {t("jobDetailsPage.clickToViewProfile")}
+                                    {new Date(quote.createdAt).toLocaleDateString()} •{" "}
+                                    {t("jobDetailsPage.clickToViewProfile")}
                                   </p>
                                 </div>
                               </Link>
@@ -699,7 +691,9 @@ export default function JobDetails({ params }) {
                                 <Upload className="h-4 w-4 mr-2" />
                                 {t("jobDetailsPage.uploadImage")}
                               </Button>
-                              {quoteImage && <span className="text-sm text-green-600">{t("jobDetailsPage.imageAttached")}</span>}
+                              {quoteImage && (
+                                <span className="text-sm text-green-600">{t("jobDetailsPage.imageAttached")}</span>
+                              )}
                             </div>
                           </div>
                           <Button type="submit" disabled={isSubmitting}>
@@ -734,10 +728,11 @@ export default function JobDetails({ params }) {
                               className={`flex ${message.sender._id === user?._id ? "justify-end" : "justify-start"}`}
                             >
                               <div
-                                className={`max-w-[80%] rounded-lg p-3 ${message.sender._id === user?._id
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-gray-100 dark:bg-gray-800"
-                                  }`}
+                                className={`max-w-[80%] rounded-lg p-3 ${
+                                  message.sender._id === user?._id
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-gray-100 dark:bg-gray-800"
+                                }`}
                               >
                                 <div className="text-xs mb-1">
                                   {message.sender._id !== user?._id && (
@@ -821,8 +816,28 @@ export default function JobDetails({ params }) {
               </div>
               {job.status === "in_progress" && job.escrowEndDate && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                  <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">{t("jobDetailsPage.escrowTimer")}</h3>
-                  <CountdownTimer endDate={job.escrowEndDate} onComplete={handleTimerComplete} />
+                  <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
+                    {t("jobDetailsPage.escrowTimer")}
+                  </h3>
+
+                  <div className="mb-3 p-2 bg-white dark:bg-gray-800 rounded border">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Job will auto-complete on:</p>
+                    <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                      {formatEndDate(job.escrowEndDate)}
+                    </p>
+                  </div>
+
+                  {!timerStarted ? (
+                    <Button onClick={handleStartTimer} className="w-full mb-2 bg-transparent" variant="outline">
+                      <Play className="h-4 w-4 mr-2" />
+                      Start Timer
+                    </Button>
+                  ) : (
+                    <div className="mb-2">
+                      <CountdownTimer endDate={job.escrowEndDate} onComplete={handleTimerComplete} />
+                    </div>
+                  )}
+
                   <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
                     {t("jobDetailsPage.jobWillAutoComplete")}
                   </p>
@@ -837,16 +852,22 @@ export default function JobDetails({ params }) {
                 <p className="font-semibold mt-1">{job.location}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("jobDetailsPage.datePosted")}</h3>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  {t("jobDetailsPage.datePosted")}
+                </h3>
                 <p className="font-semibold mt-1">{new Date(job.createdAt).toLocaleDateString()}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("jobDetailsPage.quotesReceived")}</h3>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  {t("jobDetailsPage.quotesReceived")}
+                </h3>
                 <p className="font-semibold mt-1">{quotes?.length || 0}</p>
               </div>
               {job.status === "in_progress" && job.hiredProvider && (
                 <div className="border-t pt-4 mt-4">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">{t("jobDetailsPage.hiredProvider")}</h3>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                    {t("jobDetailsPage.hiredProvider")}
+                  </h3>
                   <div className="flex items-center">
                     <Avatar className="h-10 w-10 mr-3">
                       <AvatarImage
@@ -856,9 +877,9 @@ export default function JobDetails({ params }) {
                       <AvatarFallback>
                         {job?.hiredProvider?.name
                           ? job?.hiredProvider.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
                           : "P"}
                       </AvatarFallback>
                     </Avatar>
@@ -891,7 +912,7 @@ export default function JobDetails({ params }) {
                 <div className="border-t pt-4 mt-4">
                   <Button
                     variant="outline"
-                    className="w-full text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                    className="w-full text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 bg-transparent"
                     onClick={async () => {
                       if (confirm(t("jobDetailsPage.areYouSureCancelJob"))) {
                         try {
@@ -955,8 +976,11 @@ export default function JobDetails({ params }) {
             <AlertDialogTitle>{t("jobDetailsPage.confirmHiring")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t("jobDetailsPage.confirmHiringDescription", {
-                providerName: selectedProvider?.provider?.name || selectedProvider?.provider?.email || t("jobDetailsPage.theProvider"),
-                price: selectedProvider?.price
+                providerName:
+                  selectedProvider?.provider?.name ||
+                  selectedProvider?.provider?.email ||
+                  t("jobDetailsPage.theProvider"),
+                price: selectedProvider?.price,
               })}
             </AlertDialogDescription>
           </AlertDialogHeader>
