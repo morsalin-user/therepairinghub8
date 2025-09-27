@@ -113,21 +113,30 @@ export default function OTPVerificationModal({ isOpen, onClose, email, onVerific
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle>{t("otpVerificationModal.verifyYourEmail")}</DialogTitle>
-            <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
+            <DialogTitle className="text-[#22304A]">
+              {t("otpVerificationModal.verifyYourEmail")}
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-6 w-6 p-0 text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#22304A]"
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            {t("otpVerificationModal.verificationCodeSent")} <span className="font-medium">{email}</span>
+          <div className="text-sm text-[#6B7280]">
+            {t("otpVerificationModal.verificationCodeSent")} <span className="font-medium text-[#22304A]">{email}</span>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="otp">{t("otpVerificationModal.verificationCode")}</Label>
+            <Label htmlFor="otp" className="text-[#22304A]">
+              {t("otpVerificationModal.verificationCode")}
+            </Label>
             <Input
               id="otp"
               type="text"
@@ -135,7 +144,7 @@ export default function OTPVerificationModal({ isOpen, onClose, email, onVerific
               value={otp}
               onChange={handleOTPChange}
               maxLength={6}
-              className="text-center text-lg tracking-widest"
+              className="text-center text-lg tracking-widest border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
               autoComplete="one-time-code"
             />
           </div>
@@ -143,7 +152,7 @@ export default function OTPVerificationModal({ isOpen, onClose, email, onVerific
             <Button
               onClick={handleVerifyOTP}
               disabled={isVerifying || otp.length !== 6 || !isLoaded}
-              className="w-full"
+              className="w-full bg-[#10B981] hover:bg-[#0D9468] text-white hover:shadow-sm transition-colors"
             >
               {isVerifying ? (
                 <>
@@ -158,7 +167,7 @@ export default function OTPVerificationModal({ isOpen, onClose, email, onVerific
               variant="outline"
               onClick={handleResendOTP}
               disabled={isVerifying || isResending || !isLoaded}
-              className="w-full"
+              className="w-full border-[#10B981] text-[#10B981] hover:bg-[#10B981]/10 hover:text-[#0D9468] transition-colors"
             >
               {isResending ? (
                 <>
@@ -170,7 +179,7 @@ export default function OTPVerificationModal({ isOpen, onClose, email, onVerific
               )}
             </Button>
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+          <div className="text-xs text-[#6B7280] text-center">
             {t("otpVerificationModal.didntReceiveCode")}
           </div>
         </div>
