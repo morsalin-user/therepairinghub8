@@ -90,24 +90,20 @@ export async function GET(req) {
   }
 }
 
-// Create a new job
 export async function POST(req) {
   try {
     await connectToDatabase()
     
-    // Check authentication
     const authResult = await handleProtectedRoute(req)
     if (!authResult.success) {
       return authResult
     }
     
-    const { title, description, category, location, price, date } = await req.json()
+    // 🔥 CHANGE: Get 'deadline' instead of 'date'
+    const { title, description, category, location, price, deadline } = await req.json()
     
-    // Debug logging - remove after fixing
-    console.log("Received date for job creation:", date, typeof date)
-    
-    // Validate required fields
-    if (!title || !description || !category || !location || !price || !date) {
+    // Validate required fields (deadline is optional)
+    if (!title || !description || !category || !location || !price) {
       return NextResponse.json({ success: false, message: "Please provide all required fields" }, { status: 400 })
     }
     
@@ -116,15 +112,17 @@ export async function POST(req) {
       return NextResponse.json({ success: false, message: "Please provide a valid price" }, { status: 400 })
     }
     
-    // 🔥 FIX: Better date validation and conversion
-    let jobDate
-    try {
-      jobDate = new Date(date)
-      if (isNaN(jobDate.getTime())) {
-        return NextResponse.json({ success: false, message: "Please provide a valid date" }, { status: 400 })
+    // Validate deadline if provided
+    let jobDeadline = null
+    if (deadline) {
+      try {
+        jobDeadline = new Date(deadline)
+        if (isNaN(jobDeadline.getTime())) {
+          return NextResponse.json({ success: false, message: "Please provide a valid deadline" }, { status: 400 })
+        }
+      } catch (error) {
+        return NextResponse.json({ success: false, message: "Please provide a valid deadline" }, { status: 400 })
       }
-    } catch (error) {
-      return NextResponse.json({ success: false, message: "Please provide a valid date" }, { status: 400 })
     }
     
     // Create job
@@ -134,7 +132,7 @@ export async function POST(req) {
       category,
       location,
       price: Number.parseFloat(price),
-      date: jobDate, // Use validated date
+      deadline: jobDeadline, // 🔥 CHANGE: Use deadline field
       postedBy: authResult.user._id,
       status: "active",
     })
@@ -142,18 +140,9 @@ export async function POST(req) {
     // Populate the job with user details
     await job.populate("postedBy", "name email avatar")
     
-    // 🔥 FIX: Format the returned job as well
-    const jobObj = job.toObject()
-    const formattedJob = {
-      ...jobObj,
-      date: jobObj.date ? new Date(jobObj.date).toISOString() : new Date().toISOString(),
-      createdAt: jobObj.createdAt ? new Date(jobObj.createdAt).toISOString() : new Date().toISOString(),
-      updatedAt: jobObj.updatedAt ? new Date(jobObj.updatedAt).toISOString() : new Date().toISOString()
-    }
-    
     return NextResponse.json({
       success: true,
-      job: formattedJob,
+      job,
     })
   } catch (error) {
     console.error("Create job error:", error)
