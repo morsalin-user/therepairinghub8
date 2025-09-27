@@ -33,10 +33,13 @@ export default function Jobs() {
       setIsLoading(true)
       const { success, jobs } = await jobAPI.getJobs({ status: "active" })
       if (success) {
+        console.log("Fetched jobs:", jobs) // Keep some debug
         setJobs(jobs)
         setFilteredJobs(jobs)
         const uniqueCategories = [...new Set(jobs.map((job) => job.category).filter(Boolean))]
         setCategories(uniqueCategories)
+      } else {
+        console.error("Failed to fetch jobs:", { success, jobs })
       }
     } catch (error) {
       console.error("Error fetching jobs:", error)
@@ -92,19 +95,32 @@ export default function Jobs() {
     setLocation("")
   }
 
-  // Helper function to format deadline date
-  const formatDeadline = (job) => {
-    // Use the existing 'date' field since that's what has the data
-    const dateValue = job.date // Your data shows date has the value, deadline is null
+  // Helper function to format date - with better debugging
+  const formatJobDate = (job) => {
+    // Debug logging to understand what's happening
+    console.log(`Job "${job.title}" dates:`, {
+      date: job.date,
+      deadline: job.deadline,
+      createdAt: job.createdAt
+    })
     
-    if (!dateValue) return "Flexible"
+    // Try date field first, then deadline
+    const dateValue = job.date || job.deadline
+    
+    if (!dateValue) {
+      console.log(`No date found for job "${job.title}", showing Flexible`)
+      return "Flexible"
+    }
     
     const date = new Date(dateValue)
     if (isNaN(date.getTime())) {
-      return "Date not set"
+      console.log(`Invalid date for job "${job.title}":`, dateValue)
+      return "Flexible"
     }
     
-    return date.toLocaleDateString()
+    const formatted = date.toLocaleDateString()
+    console.log(`Formatted date for job "${job.title}":`, formatted)
+    return formatted
   }
 
   if (isLoading) {
