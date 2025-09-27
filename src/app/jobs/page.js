@@ -29,56 +29,26 @@ export default function Jobs() {
   }, [])
 
   const fetchJobs = async () => {
-  try {
-    setIsLoading(true)
-    const { success, jobs } = await jobAPI.getJobs({ status: "active" })
-    if (success) {
-      // 🔍 DEBUG: Log the first job to see what fields exist
-      console.log("=== JOB DATA DEBUG ===")
-      console.log("First job object:", jobs[0])
-      console.log("Job deadline:", jobs[0]?.deadline)
-      console.log("Job date:", jobs[0]?.date) 
-      console.log("All job keys:", Object.keys(jobs[0] || {}))
-      console.log("=====================")
-      
-      setJobs(jobs)
-      setFilteredJobs(jobs)
-      const uniqueCategories = [...new Set(jobs.map((job) => job.category).filter(Boolean))]
-      setCategories(uniqueCategories)
+    try {
+      setIsLoading(true)
+      const { success, jobs } = await jobAPI.getJobs({ status: "active" })
+      if (success) {
+        setJobs(jobs)
+        setFilteredJobs(jobs)
+        const uniqueCategories = [...new Set(jobs.map((job) => job.category).filter(Boolean))]
+        setCategories(uniqueCategories)
+      }
+    } catch (error) {
+      console.error("Error fetching jobs:", error)
+      toast({
+        title: t("common.error"),
+        description: t("messages.error.generic"),
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
     }
-  } catch (error) {
-    console.error("Error fetching jobs:", error)
-    toast({
-      title: t("common.error"),
-      description: t("messages.error.generic"),
-      variant: "destructive",
-    })
-  } finally {
-    setIsLoading(false)
   }
-}
-
-  // const fetchJobs = async () => {
-  //   try {
-  //     setIsLoading(true)
-  //     const { success, jobs } = await jobAPI.getJobs({ status: "active" })
-  //     if (success) {
-  //       setJobs(jobs)
-  //       setFilteredJobs(jobs)
-  //       const uniqueCategories = [...new Set(jobs.map((job) => job.category).filter(Boolean))]
-  //       setCategories(uniqueCategories)
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching jobs:", error)
-  //     toast({
-  //       title: t("common.error"),
-  //       description: t("messages.error.generic"),
-  //       variant: "destructive",
-  //     })
-  //   } finally {
-  //     setIsLoading(false)
-  //   }
-  // }
 
   useEffect(() => {
     let results = jobs
@@ -123,10 +93,13 @@ export default function Jobs() {
   }
 
   // Helper function to format deadline date
-  const formatDeadline = (deadlineValue) => {
-    if (!deadlineValue) return "Flexible"
+  const formatDeadline = (job) => {
+    // Use the existing 'date' field since that's what has the data
+    const dateValue = job.date // Your data shows date has the value, deadline is null
     
-    const date = new Date(deadlineValue)
+    if (!dateValue) return "Flexible"
+    
+    const date = new Date(dateValue)
     if (isNaN(date.getTime())) {
       return "Date not set"
     }
@@ -234,9 +207,9 @@ export default function Jobs() {
                   key={job._id}
                   id={job._id}
                   title={job.title}
-                  price={`$${job.price}`}
+                  price={`${job.price}`}
                   location={job.location}
-                  date={formatDeadline(job.deadline)}
+                  date={formatDeadline(job)}
                   category={job.category}
                 />
               ))}
