@@ -27,6 +27,18 @@ export default function JobCard({ job, userType }) {
     }
   }
 
+  // Helper function to format deadline/preferred date safely
+  const formatDeadline = (deadlineValue) => {
+    if (!deadlineValue) return t("jobCard.flexible") || "Flexible"
+    
+    const date = new Date(deadlineValue)
+    if (isNaN(date.getTime())) {
+      return t("jobCard.dateNotSet") || "Date not set"
+    }
+    
+    return date.toLocaleDateString()
+  }
+
   const handleCancelJob = async () => {
     if (!confirm(t("jobCard.areYouSureCancelJob"))) return
     setIsLoading(true)
@@ -78,25 +90,30 @@ export default function JobCard({ job, userType }) {
   return (
     <Card className="h-full">
       <CardContent className="pt-6">
-    <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
-  <div className="flex items-center">
-    <DollarSign className="h-4 w-4 mr-2 flex-shrink-0" />
-    <span>${job.price}</span>
-  </div>
-  <div className="flex items-center">
-    <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-    <span>{job.location}</span>
-  </div>
-  <div className="flex items-center">
-    <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-    {/* Make it clear this is when service is needed */}
-    <span>Needed by: {formatDate(job.date)}</span>
-  </div>
-  {/* Optionally show when posted */}
-  <div className="flex items-center text-xs text-gray-400">
-    <span>Posted: {formatDate(job.createdAt)}</span>
-  </div>
-</div>
+        <div className="flex justify-between items-start mb-3">
+          <h3 className="text-xl font-semibold line-clamp-2">{job.title}</h3>
+          {getStatusBadge(job.status)}
+        </div>
+        <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">{job.description}</p>
+        <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center">
+            <DollarSign className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span>${job.price}</span>
+          </div>
+          <div className="flex items-center">
+            <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span>{job.location}</span>
+          </div>
+          {/* 🔥 FIX: Use job.deadline instead of job.date */}
+          <div className="flex items-center">
+            <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span>Preferred by: {formatDeadline(job.deadline)}</span>
+          </div>
+          {/* Show when job was posted */}
+          <div className="flex items-center text-xs text-gray-400">
+            <span>Posted: {job.createdAt ? new Date(job.createdAt).toLocaleDateString() : "Recently"}</span>
+          </div>
+        </div>
       </CardContent>
       <CardFooter className="border-t pt-4 flex justify-between">
         <Link href={`/jobs/${job._id}`}>
