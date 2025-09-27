@@ -1,5 +1,4 @@
 "use client"
-
 import Link from "next/link"
 import { useTranslation } from "@/lib/i18n"
 
@@ -37,23 +36,25 @@ export default function Footer() {
   ]
 
   return (
-    <footer className="bg-navy-blue text-white">
+    <footer className="bg-[#1E3A8A] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="lg:col-span-1">
             <Link href="/" className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-accent-green rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">RH</span>
+              <div className="w-12 h-12 bg-[#10B981] rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">RH</span>
               </div>
-              <span className="text-xl font-bold">RepairingHub</span>
+              <span className="text-2xl font-bold">RepairingHub</span>
             </Link>
-            <p className="text-white/70 text-sm leading-relaxed mb-6">{t("footer.description")}</p>
+            <p className="text-white/70 text-sm leading-relaxed mb-6">
+              {t("footer.description")}
+            </p>
             <div className="flex space-x-4">
               {/* Social Media Links */}
               <a
                 href="#"
-                className="text-white/70 hover:text-accent-green transition-colors duration-200"
+                className="text-white/70 hover:text-[#10B981] transition-colors duration-200"
                 aria-label="Facebook"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -62,7 +63,7 @@ export default function Footer() {
               </a>
               <a
                 href="#"
-                className="text-white/70 hover:text-accent-green transition-colors duration-200"
+                className="text-white/70 hover:text-[#10B981] transition-colors duration-200"
                 aria-label="Twitter"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -71,7 +72,7 @@ export default function Footer() {
               </a>
               <a
                 href="#"
-                className="text-white/70 hover:text-accent-green transition-colors duration-200"
+                className="text-white/70 hover:text-[#10B981] transition-colors duration-200"
                 aria-label="LinkedIn"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -84,13 +85,15 @@ export default function Footer() {
           {/* Footer Sections */}
           {footerSections.map((section, index) => (
             <div key={index}>
-              <h3 className="text-white font-semibold mb-4">{section.title}</h3>
+              <h3 className="text-white font-semibold mb-4 text-lg">
+                {section.title}
+              </h3>
               <ul className="space-y-3">
                 {section.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
                     <Link
                       href={link.href}
-                      className="text-white/70 hover:text-accent-green transition-colors duration-200 text-sm"
+                      className="text-white/70 hover:text-[#10B981] transition-colors duration-200 text-sm"
                     >
                       {link.label}
                     </Link>
@@ -104,17 +107,19 @@ export default function Footer() {
         {/* Bottom Section */}
         <div className="border-t border-white/10 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-white/70 text-sm">© 2024 RepairingHub. {t("footer.copyright")}</p>
+            <p className="text-white/70 text-sm">
+              © 2025 RepairingHub. {t("footer.copyright")}
+            </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link
                 href="/privacy"
-                className="text-white/70 hover:text-accent-green transition-colors duration-200 text-sm"
+                className="text-white/70 hover:text-[#10B981] transition-colors duration-200 text-sm"
               >
                 {t("footer.privacy")}
               </Link>
               <Link
                 href="/terms"
-                className="text-white/70 hover:text-accent-green transition-colors duration-200 text-sm"
+                className="text-white/70 hover:text-[#10B981] transition-colors duration-200 text-sm"
               >
                 {t("footer.terms")}
               </Link>
