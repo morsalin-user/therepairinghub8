@@ -32,14 +32,14 @@ export default function LanguageSelector() {
         <Button
           variant="ghost"
           size="sm"
-          className="h-9 w-9 p-0 text-white hover:bg-white/10 hover:text-white"
+          className="h-9 w-9 p-0 text-white hover:bg-[#10B981]/20 hover:text-[#10B981] transition-colors duration-200"
           disabled={isChanging}
         >
           <Globe className="h-4 w-4" />
           <span className="sr-only">{t("languageSelector.switchLanguage")}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 mt-3">
+      <DropdownMenuContent align="end" className="w-48 mt-3 bg-white">
         {Object.entries(LANGUAGES).map(([code, name]) => {
           const isSupported = SUPPORTED_LANGUAGES.includes(code)
           const isActive = currentLanguage === code
@@ -47,19 +47,19 @@ export default function LanguageSelector() {
             <DropdownMenuItem
               key={code}
               onClick={() => handleLanguageChange(code)}
-              className="flex items-center justify-between cursor-pointer"
+              className="flex items-center justify-between cursor-pointer hover:bg-[#10B981]/10 transition-colors duration-200"
               disabled={isChanging || !isSupported}
             >
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{name}</span>
+                <span className="text-sm font-medium text-[#22304A]">{name}</span>
                 {!isSupported && (
-                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
-                    <Clock className="h-3 w-3 mr-1" />
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-orange-100 text-orange-800">
+                    <Clock className="h-3 w-3 mr-1 text-orange-800" />
                     {t("languageSelector.soon")}
                   </Badge>
                 )}
               </div>
-              {isActive && <Check className="h-4 w-4 text-accent-green" />}
+              {isActive && <Check className="h-4 w-4 text-[#10B981]" />}
             </DropdownMenuItem>
           )
         })}
