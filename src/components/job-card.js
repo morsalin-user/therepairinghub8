@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MapPin, Calendar, DollarSign } from "lucide-react"
+import { MapPin, Calendar, DollarSign, Wrench, Home, Handshake } from "lucide-react"
 import { jobAPI } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
@@ -13,6 +13,18 @@ export default function JobCard({ job, userType }) {
   const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+
+  // Map job types to icons
+  const getJobIcon = (type) => {
+    switch (type.toLowerCase()) {
+      case "painting":
+        return <Wrench className="h-5 w-5 text-green-600" />
+      case "electrical":
+        return <Home className="h-5 w-5 text-green-600" />
+      default:
+        return <Handshake className="h-5 w-5 text-green-600" />
+    }
+  }
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -76,31 +88,42 @@ export default function JobCard({ job, userType }) {
   }
 
   return (
-    <Card className="h-full">
+    <Card
+      className="h-full transition-all hover:scale-[1.02] hover:shadow-lg hover:border-green-500 border-gray-200"
+      style={{ borderColor: "#10B981" }}
+    >
       <CardContent className="pt-6">
         <div className="flex justify-between items-start mb-3">
-          <h3 className="text-xl font-semibold line-clamp-2">{job.title}</h3>
+          <div className="flex items-center gap-2">
+            {getJobIcon(job.type)}
+            <h3 className="text-xl font-semibold text-[#22304A] line-clamp-2">{job.title}</h3>
+          </div>
           {getStatusBadge(job.status)}
         </div>
         <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">{job.description}</p>
         <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
           <div className="flex items-center">
-            <DollarSign className="h-4 w-4 mr-2 flex-shrink-0" />
+            <DollarSign className="h-4 w-4 mr-2 flex-shrink-0 text-[#10B981]" />
             <span>${job.price}</span>
           </div>
           <div className="flex items-center">
-            <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+            <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-[#10B981]" />
             <span>{job.location}</span>
           </div>
           <div className="flex items-center">
-            <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+            <Calendar className="h-4 w-4 mr-2 flex-shrink-0 text-[#10B981]" />
             <span>{new Date(job.date).toLocaleDateString()}</span>
           </div>
         </div>
       </CardContent>
       <CardFooter className="border-t pt-4 flex justify-between">
         <Link href={`/jobs/${job._id}`}>
-          <Button variant="outline">{t("jobCard.viewDetails")}</Button>
+          <Button
+            variant="outline"
+            className="hover:bg-[#10B981] hover:text-white border-[#10B981] text-[#10B981]"
+          >
+            {t("jobCard.viewDetails")}
+          </Button>
         </Link>
         {userType === "Buyer" && job.status === "active" && (
           <Button
@@ -114,11 +137,17 @@ export default function JobCard({ job, userType }) {
         )}
         {userType === "Seller" && job.status === "active" && (
           <Link href={`/jobs/${job._id}`}>
-            <Button>{t("jobCard.sendQuote")}</Button>
+            <Button className="bg-[#10B981] hover:bg-[#0d9468]">
+              {t("jobCard.sendQuote")}
+            </Button>
           </Link>
         )}
         {userType === "Buyer" && job.status === "in_progress" && (
-          <Button onClick={handleMarkComplete} disabled={isLoading}>
+          <Button
+            className="bg-[#10B981] hover:bg-[#0d9468]"
+            onClick={handleMarkComplete}
+            disabled={isLoading}
+          >
             {t("jobCard.markComplete")}
           </Button>
         )}
