@@ -76,7 +76,6 @@ export default function PostJobPage() {
     }
     setIsSubmitting(true)
     try {
-      console.log("Submitting job data:", data)
       const result = await jobAPI.createJob(data)
       if (result.success) {
         toast({
@@ -107,16 +106,21 @@ export default function PostJobPage() {
   // Check if user is authenticated and is a buyer
   if (isAuthenticated && user?.userType !== "Buyer") {
     return (
-      <Card className="max-w-2xl mx-auto">
+      <Card className="max-w-2xl mx-auto border border-[#E5E7EB]">
         <CardHeader>
-          <CardTitle>{t("postJobPage.accessDenied")}</CardTitle>
-          <CardDescription>{t("postJobPage.onlyBuyersCanPostJobs")}</CardDescription>
+          <CardTitle className="text-[#22304A]">{t("postJobPage.accessDenied")}</CardTitle>
+          <CardDescription className="text-[#6B7280]">{t("postJobPage.onlyBuyersCanPostJobs")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>{t("postJobPage.permissionDenied")}</p>
+          <p className="text-[#6B7280]">{t("postJobPage.permissionDenied")}</p>
         </CardContent>
         <CardFooter>
-          <Button onClick={() => router.push("/")}>{t("postJobPage.returnToHome")}</Button>
+          <Button
+            onClick={() => router.push("/")}
+            className="bg-[#10B981] hover:bg-[#0D9468] text-white"
+          >
+            {t("postJobPage.returnToHome")}
+          </Button>
         </CardFooter>
       </Card>
     )
@@ -124,11 +128,11 @@ export default function PostJobPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">{t("postJobPage.title")}</h1>
-      <Card>
+      <h1 className="text-3xl font-bold text-[#22304A] mb-6">{t("postJobPage.title")}</h1>
+      <Card className="border border-[#E5E7EB]">
         <CardHeader>
-          <CardTitle>{t("postJobPage.jobDetails")}</CardTitle>
-          <CardDescription>{t("postJobPage.subtitle")}</CardDescription>
+          <CardTitle className="text-[#22304A]">{t("postJobPage.jobDetails")}</CardTitle>
+          <CardDescription className="text-[#6B7280]">{t("postJobPage.subtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -138,11 +142,17 @@ export default function PostJobPage() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("postJobPage.jobTitle")}</FormLabel>
+                    <FormLabel className="text-[#22304A]">{t("postJobPage.jobTitle")}</FormLabel>
                     <FormControl>
-                      <Input placeholder={t("postJobPage.jobTitlePlaceholder")} {...field} />
+                      <Input
+                        placeholder={t("postJobPage.jobTitlePlaceholder")}
+                        {...field}
+                        className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
+                      />
                     </FormControl>
-                    <FormDescription>{t("postJobPage.jobTitleDescription")}</FormDescription>
+                    <FormDescription className="text-[#6B7280]">
+                      {t("postJobPage.jobTitleDescription")}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -152,15 +162,17 @@ export default function PostJobPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("postJobPage.description")}</FormLabel>
+                    <FormLabel className="text-[#22304A]">{t("postJobPage.description")}</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder={t("postJobPage.descriptionPlaceholder")}
-                        className="min-h-32"
+                        className="min-h-32 border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>{t("postJobPage.descriptionDescription")}</FormDescription>
+                    <FormDescription className="text-[#6B7280]">
+                      {t("postJobPage.descriptionDescription")}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -171,11 +183,20 @@ export default function PostJobPage() {
                   name="price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("postJobPage.budget")}</FormLabel>
+                      <FormLabel className="text-[#22304A]">{t("postJobPage.budget")}</FormLabel>
                       <FormControl>
-                        <Input type="number" min="5" step="0.01" placeholder={t("postJobPage.budgetPlaceholder")} {...field} />
+                        <Input
+                          type="number"
+                          min="5"
+                          step="0.01"
+                          placeholder={t("postJobPage.budgetPlaceholder")}
+                          {...field}
+                          className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
+                        />
                       </FormControl>
-                      <FormDescription>{t("postJobPage.budgetDescription")}</FormDescription>
+                      <FormDescription className="text-[#6B7280]">
+                        {t("postJobPage.budgetDescription")}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -185,11 +206,17 @@ export default function PostJobPage() {
                   name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("postJobPage.location")}</FormLabel>
+                      <FormLabel className="text-[#22304A]">{t("postJobPage.location")}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t("postJobPage.locationPlaceholder")} {...field} />
+                        <Input
+                          placeholder={t("postJobPage.locationPlaceholder")}
+                          {...field}
+                          className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
+                        />
                       </FormControl>
-                      <FormDescription>{t("postJobPage.locationDescription")}</FormDescription>
+                      <FormDescription className="text-[#6B7280]">
+                        {t("postJobPage.locationDescription")}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -201,19 +228,23 @@ export default function PostJobPage() {
                   name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>{t("postJobPage.preferredDate")}</FormLabel>
+                      <FormLabel className="text-[#22304A]">{t("postJobPage.preferredDate")}</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
                               variant={"outline"}
                               className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground",
+                                "w-full pl-3 text-left font-normal border-[#E5E7EB] hover:bg-[#F3F4F6]",
+                                !field.value && "text-[#6B7280]",
                               )}
                             >
-                              {field.value ? format(field.value, "PPP") : <span>{t("postJobPage.selectDate")}</span>}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              {field.value ? (
+                                <span className="text-[#22304A]">{format(field.value, "PPP")}</span>
+                              ) : (
+                                <span className="text-[#6B7280]">{t("postJobPage.selectDate")}</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 text-[#6B7280]" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
@@ -227,7 +258,9 @@ export default function PostJobPage() {
                           />
                         </PopoverContent>
                       </Popover>
-                      <FormDescription>{t("postJobPage.preferredDateDescription")}</FormDescription>
+                      <FormDescription className="text-[#6B7280]">
+                        {t("postJobPage.preferredDateDescription")}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -237,10 +270,10 @@ export default function PostJobPage() {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("postJobPage.category")}</FormLabel>
+                      <FormLabel className="text-[#22304A]">{t("postJobPage.category")}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="border-[#E5E7EB] focus:ring-[#10B981]">
                             <SelectValue placeholder={t("postJobPage.selectCategory")} />
                           </SelectTrigger>
                         </FormControl>
@@ -252,13 +285,19 @@ export default function PostJobPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>{t("postJobPage.categoryDescription")}</FormDescription>
+                      <FormDescription className="text-[#6B7280]">
+                        {t("postJobPage.categoryDescription")}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                className="w-full bg-[#10B981] hover:bg-[#0D9468] text-white"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
