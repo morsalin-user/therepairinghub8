@@ -153,7 +153,13 @@ export default function JobDetails({ params }) {
   }
 
   const formatEndDate = (endDate) => {
+    if (!endDate) return "Date not available"
+
     const date = new Date(endDate)
+
+    // Check if date is valid
+    if (isNaN(date.getTime())) return "Invalid date"
+
     const options = {
       day: "numeric",
       month: "short",
@@ -161,7 +167,10 @@ export default function JobDetails({ params }) {
       minute: "2-digit",
       hour12: true,
     }
-    return date.toLocaleDateString("en-US", options).replace(",", ",")
+
+    // Format the date properly
+    const formattedDate = date.toLocaleDateString("en-US", options)
+    return formattedDate
   }
 
   const handleSubmitReview = async () => {
