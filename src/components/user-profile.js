@@ -127,14 +127,14 @@ export default function UserProfile({ params }) {
 
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <Star key={i} className={`h-4 w-4 ${i < rating ? "text-yellow-400 fill-current" : "text-gray-300"}`} />
+      <Star key={i} className={`h-4 w-4 ${i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
     ))
   }
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#10B981]" />
       </div>
     )
   }
@@ -142,10 +142,12 @@ export default function UserProfile({ params }) {
   if (!user) {
     return (
       <div className="container py-10">
-        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <h3 className="text-xl font-medium mb-2">{t("userProfilePage.userNotFound")}</h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">{t("userProfilePage.userNotFoundDescription")}</p>
-          <Button onClick={() => router.back()}>{t("userProfilePage.goBack")}</Button>
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <h3 className="text-xl font-medium text-[#22304A] mb-2">{t("userProfilePage.userNotFound")}</h3>
+          <p className="text-[#6B7280] mb-6">{t("userProfilePage.userNotFoundDescription")}</p>
+          <Button onClick={() => router.back()} className="bg-[#10B981] hover:bg-[#0D9468] text-white">
+            {t("userProfilePage.goBack")}
+          </Button>
         </div>
       </div>
     )
@@ -159,7 +161,7 @@ export default function UserProfile({ params }) {
             <CardHeader className="text-center">
               <Avatar className="h-24 w-24 mx-auto mb-4">
                 <AvatarImage src={user.avatar || "/placeholder.svg?height=96&width=96"} alt={user.name} />
-                <AvatarFallback className="text-2xl">
+                <AvatarFallback className="text-2xl bg-[#10B981] text-white">
                   {user.name
                     ? user.name
                         .split(" ")
@@ -168,34 +170,38 @@ export default function UserProfile({ params }) {
                     : "U"}
                 </AvatarFallback>
               </Avatar>
-              <CardTitle className="text-2xl">{user.name}</CardTitle>
+              <CardTitle className="text-2xl text-[#22304A]">{user.name}</CardTitle>
               <CardDescription>
-                <Badge variant={user.userType === "Seller" ? "default" : "secondary"}>{user.userType}</Badge>
+                <Badge
+                  variant={user.userType === "Seller" ? "default" : "secondary"}
+                  className="bg-[#10B981]/10 text-[#10B981] border-[#10B981]"
+                >
+                  {user.userType}
+                </Badge>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center">
                 <div className="flex justify-center items-center space-x-1 mb-2">
                   {renderStars(Math.round(user.rating || 0))}
-                  <span className="ml-2 text-sm text-gray-600">
-                    {user.rating ? user.rating.toFixed(1) : "0.0"} ({user.reviewCount || 0}{" "}
-                    {t("userProfilePage.reviews")})
+                  <span className="ml-2 text-sm text-[#6B7280]">
+                    {user.rating ? user.rating.toFixed(1) : "0.0"} ({user.reviewCount || 0} {t("userProfilePage.reviews")})
                   </span>
                 </div>
               </div>
               <div className="space-y-2">
-                <div className="flex items-center text-sm">
-                  <Mail className="h-4 w-4 mr-2 text-gray-500" />
+                <div className="flex items-center text-sm text-[#6B7280]">
+                  <Mail className="h-4 w-4 mr-2 text-[#10B981]" />
                   <span>{user.email}</span>
                 </div>
                 {user.phone && (
-                  <div className="flex items-center text-sm">
-                    <Phone className="h-4 w-4 mr-2 text-gray-500" />
+                  <div className="flex items-center text-sm text-[#6B7280]">
+                    <Phone className="h-4 w-4 mr-2 text-[#10B981]" />
                     <span>{user.phone}</span>
                   </div>
                 )}
-                <div className="flex items-center text-sm">
-                  <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                <div className="flex items-center text-sm text-[#6B7280]">
+                  <Calendar className="h-4 w-4 mr-2 text-[#10B981]" />
                   <span>
                     {t("userProfilePage.joined")} {new Date(user.createdAt).toLocaleDateString()}
                   </span>
@@ -203,16 +209,16 @@ export default function UserProfile({ params }) {
               </div>
               {user.bio && (
                 <div>
-                  <h3 className="font-semibold mb-2">{t("userProfilePage.about")}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">{user.bio}</p>
+                  <h3 className="font-semibold text-[#22304A] mb-2">{t("userProfilePage.about")}</h3>
+                  <p className="text-sm text-[#6B7280]">{user.bio}</p>
                 </div>
               )}
               {user.services && user.services.length > 0 && (
                 <div>
-                  <h3 className="font-semibold mb-2">{t("userProfilePage.services")}</h3>
+                  <h3 className="font-semibold text-[#22304A] mb-2">{t("userProfilePage.services")}</h3>
                   <div className="flex flex-wrap gap-2">
                     {user.services.map((service, index) => (
-                      <Badge key={index} variant="outline">
+                      <Badge key={index} variant="outline" className="border-[#10B981] text-[#10B981]">
                         {service}
                       </Badge>
                     ))}
@@ -221,7 +227,7 @@ export default function UserProfile({ params }) {
               )}
               {currentUser && currentUser._id !== user._id && (
                 <Button
-                  className="w-full"
+                  className="w-full mt-4"
                   onClick={() => setShowReviewModal(true)}
                   variant={existingReview ? "outline" : "default"}
                 >
@@ -241,16 +247,18 @@ export default function UserProfile({ params }) {
         <div className="md:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>
+              <CardTitle className="text-[#22304A]">
                 {t("userProfilePage.reviews")} ({reviews.length})
               </CardTitle>
-              <CardDescription>{t("userProfilePage.whatOthersSay", { userName: user.name })}</CardDescription>
+              <CardDescription className="text-[#6B7280]">
+                {t("userProfilePage.whatOthersSay", { userName: user.name })}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {reviews.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500 dark:text-gray-400">{t("userProfilePage.noReviewsYet")}</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
+                  <p className="text-[#6B7280]">{t("userProfilePage.noReviewsYet")}</p>
+                  <p className="text-sm text-[#6B7280] mt-2">
                     {t("userProfilePage.beFirstToLeaveReview", { userName: user.name })}
                   </p>
                 </div>
@@ -260,7 +268,9 @@ export default function UserProfile({ params }) {
                     <div
                       key={review._id}
                       className={`border rounded-lg p-4 ${
-                        review.reviewer._id === currentUser?._id ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200" : ""
+                        review.reviewer._id === currentUser?._id
+                          ? "bg-[#10B981]/5 border-[#10B981]"
+                          : "border-[#E5E7EB]"
                       }`}
                     >
                       <div className="flex items-start justify-between mb-3">
@@ -270,7 +280,7 @@ export default function UserProfile({ params }) {
                               src={review.reviewer.avatar || "/placeholder.svg?height=40&width=40"}
                               alt={review.reviewer.name}
                             />
-                            <AvatarFallback>
+                            <AvatarFallback className="bg-[#10B981] text-white">
                               {review.reviewer.name
                                 ? review.reviewer.name
                                     .split(" ")
@@ -280,26 +290,26 @@ export default function UserProfile({ params }) {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">
+                            <p className="font-medium text-[#22304A]">
                               {review.reviewer.name}
                               {review.reviewer._id === currentUser?._id && (
-                                <Badge variant="secondary" className="ml-2">
+                                <Badge variant="secondary" className="ml-2 bg-[#10B981]/10 text-[#10B981]">
                                   {t("userProfilePage.yourReview")}
                                 </Badge>
                               )}
                             </p>
                             <div className="flex items-center">
-                              {renderStars(review.rating)}
-                              <span className="ml-2 text-sm text-gray-500">
+                              <div className="flex">{renderStars(review.rating)}</div>
+                              <span className="ml-2 text-sm text-[#6B7280]">
                                 {new Date(review.createdAt).toLocaleDateString()}
                               </span>
                             </div>
                           </div>
                         </div>
                       </div>
-                      <p className="text-gray-600 dark:text-gray-300">{review.comment}</p>
+                      <p className="text-[#6B7280]">{review.comment}</p>
                       {review.job && (
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className="text-xs text-[#6B7280] mt-2">
                           {t("userProfilePage.reviewForJob")}: {review.job.title}
                         </p>
                       )}
@@ -313,14 +323,14 @@ export default function UserProfile({ params }) {
       </div>
       {showReviewModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-[#22304A] mb-4">
               {existingReview ? t("userProfilePage.editYourReview") : t("userProfilePage.leaveAReview")}{" "}
               {t("userProfilePage.for")} {user.name}
             </h3>
             <div className="space-y-4">
               <div>
-                <Label>{t("userProfilePage.rating")}</Label>
+                <Label className="text-[#22304A]">{t("userProfilePage.rating")}</Label>
                 <div className="flex space-x-1 mt-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -335,20 +345,29 @@ export default function UserProfile({ params }) {
                 </div>
               </div>
               <div>
-                <Label>{t("userProfilePage.comment")}</Label>
+                <Label className="text-[#22304A]">{t("userProfilePage.comment")}</Label>
                 <Textarea
                   value={reviewData.comment}
                   onChange={(e) => setReviewData((prev) => ({ ...prev, comment: e.target.value }))}
                   placeholder={t("userProfilePage.shareYourExperience")}
                   rows={4}
+                  className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                 />
               </div>
             </div>
             <div className="flex justify-end space-x-2 mt-6">
-              <Button variant="outline" onClick={() => setShowReviewModal(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowReviewModal(false)}
+                className="border-[#E5E7EB] text-[#6B7280] hover:bg-[#F3F4F6]"
+              >
                 {t("userProfilePage.cancel")}
               </Button>
-              <Button onClick={handleSubmitReview} disabled={isSubmittingReview}>
+              <Button
+                onClick={handleSubmitReview}
+                disabled={isSubmittingReview}
+                className="bg-[#10B981] hover:bg-[#0D9468] text-white"
+              >
                 {isSubmittingReview ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
