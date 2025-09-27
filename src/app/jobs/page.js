@@ -92,6 +92,18 @@ export default function Jobs() {
     setLocation("")
   }
 
+  // Helper function to format deadline date
+  const formatDeadline = (deadlineValue) => {
+    if (!deadlineValue) return "Flexible"
+    
+    const date = new Date(deadlineValue)
+    if (isNaN(date.getTime())) {
+      return "Date not set"
+    }
+    
+    return date.toLocaleDateString()
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -159,6 +171,7 @@ export default function Jobs() {
             </Button>
           </CardContent>
         </Card>
+
         {/* Job Listings */}
         <div className="flex-1">
           <div className="mb-6">
@@ -183,6 +196,7 @@ export default function Jobs() {
               <p className="text-gray-500">{t("jobsPage.jobsFound", { count: filteredJobs.length })}</p>
             </div>
           </div>
+
           {filteredJobs.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredJobs.map((job) => (
@@ -192,7 +206,7 @@ export default function Jobs() {
                   title={job.title}
                   price={`$${job.price}`}
                   location={job.location}
-                  date={new Date(job.date).toLocaleDateString()}
+                  date={formatDeadline(job.deadline)}
                   category={job.category}
                 />
               ))}
