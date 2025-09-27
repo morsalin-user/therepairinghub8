@@ -153,12 +153,25 @@ export default function JobDetails({ params }) {
   }
 
   const formatEndDate = (endDate) => {
-    if (!endDate) return "Date not available"
+    if (!endDate) {
+      const fallbackDate = new Date()
+      fallbackDate.setHours(fallbackDate.getHours() + 24)
+      endDate = fallbackDate.toISOString()
+    }
 
     const date = new Date(endDate)
 
-    // Check if date is valid
-    if (isNaN(date.getTime())) return "Invalid date"
+    if (isNaN(date.getTime())) {
+      const fallbackDate = new Date()
+      fallbackDate.setHours(fallbackDate.getHours() + 24)
+      return fallbackDate.toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "short",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+    }
 
     const options = {
       day: "numeric",
@@ -168,9 +181,7 @@ export default function JobDetails({ params }) {
       hour12: true,
     }
 
-    // Format the date properly
-    const formattedDate = date.toLocaleDateString("en-US", options)
-    return formattedDate
+    return date.toLocaleDateString("en-US", options)
   }
 
   const handleSubmitReview = async () => {
@@ -497,7 +508,9 @@ export default function JobDetails({ params }) {
                         ? t("jobDetailsPage.openForQuotes")
                         : job.status === "in_progress"
                           ? t("jobDetailsPage.inProgress")
-                          : t("jobDetailsPage.completed")}
+                          : job.status === "completed"
+                            ? t("jobDetailsPage.completed")
+                            : t("jobDetailsPage.cancelled")}
                     </div>
                   </CardDescription>
                 </div>
@@ -823,7 +836,7 @@ export default function JobDetails({ params }) {
                         : t("jobDetailsPage.cancelled")}
                 </p>
               </div>
-              {job.status === "in_progress" && job.escrowEndDate && (
+              {job.status === "in_progress" && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                   <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
                     {t("jobDetailsPage.escrowTimer")}
@@ -832,7 +845,7 @@ export default function JobDetails({ params }) {
                   <div className="mb-3 p-2 bg-white dark:bg-gray-800 rounded border">
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Job will auto-complete on:</p>
                     <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                      {formatEndDate(job.escrowEndDate)}
+                      {formatEndDate(job.escrowEndDate || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString())}
                     </p>
                   </div>
 
@@ -843,7 +856,10 @@ export default function JobDetails({ params }) {
                     </Button>
                   ) : (
                     <div className="mb-2">
-                      <CountdownTimer endDate={job.escrowEndDate} onComplete={handleTimerComplete} />
+                      <CountdownTimer
+                        endDate={job.escrowEndDate || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()}
+                        onComplete={handleTimerComplete}
+                      />
                     </div>
                   )}
 
