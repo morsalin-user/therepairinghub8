@@ -1,5 +1,4 @@
 "use client"
-import { Label } from "@/components/ui/label"
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -39,12 +38,10 @@ export default function JobDetails({ params }) {
   const { toast } = useToast()
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const dispatch = useAppDispatch()
-
   const job = useAppSelector((state) => state.jobs.currentJob)
   const quotes = useAppSelector((state) => state.quotes.quotes)
   const messages = useAppSelector((state) => state.messages.messages)
   const jobLoading = useAppSelector((state) => state.jobs.loading)
-
   const [isLoading, setIsLoading] = useState(true)
   const [newQuote, setNewQuote] = useState("")
   const [quotePrice, setQuotePrice] = useState("")
@@ -58,11 +55,8 @@ export default function JobDetails({ params }) {
   const [activeTab, setActiveTab] = useState("quotes")
   const messagesEndRef = useRef(null)
   const messagesContainerRef = useRef(null)
-
   const [timerStarted, setTimerStarted] = useState(false)
-
   const { startMessagePolling, stopMessagePolling, subscribeToJobUpdates, sendMessage } = useRealTimeUpdates()
-
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [reviewData, setReviewData] = useState({ rating: 5, comment: "" })
   const [isSubmittingReview, setIsSubmittingReview] = useState(false)
@@ -74,7 +68,6 @@ export default function JobDetails({ params }) {
       return
     }
     fetchJobDetails()
-
     return () => {
       dispatch(setCurrentJob(null))
       dispatch(setQuotes([]))
@@ -441,7 +434,7 @@ export default function JobDetails({ params }) {
   if (isLoading || jobLoading || authLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#10B981]" />
       </div>
     )
   }
@@ -449,11 +442,13 @@ export default function JobDetails({ params }) {
   if (!job) {
     return (
       <div className="container py-10">
-        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <h3 className="text-xl font-medium mb-2">{t("jobDetailsPage.jobNotFound")}</h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">{t("jobDetailsPage.jobDoesNotExist")}</p>
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <h3 className="text-xl font-medium text-[#22304A] mb-2">{t("jobDetailsPage.jobNotFound")}</h3>
+          <p className="text-[#6B7280] mb-6">{t("jobDetailsPage.jobDoesNotExist")}</p>
           <Button asChild>
-            <Link href="/jobs">{t("jobDetailsPage.browseJobs")}</Link>
+            <Link href="/jobs" className="bg-[#10B981] hover:bg-[#0D9468] text-white">
+              {t("jobDetailsPage.browseJobs")}
+            </Link>
           </Button>
         </div>
       </div>
@@ -464,25 +459,25 @@ export default function JobDetails({ params }) {
     <div className="container py-10">
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
-          <Card>
+          <Card className="border border-[#E5E7EB]">
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <Badge className="mb-2">{job.category}</Badge>
-                  <CardTitle className="text-2xl mb-2">{job.title}</CardTitle>
+                  <Badge className="mb-2 bg-[#10B981]/10 text-[#10B981]">{job.category}</Badge>
+                  <CardTitle className="text-2xl text-[#22304A] mb-2">{job.title}</CardTitle>
                   <CardDescription className="flex flex-wrap gap-4 text-sm">
-                    <div className="flex items-center">
+                    <div className="flex items-center text-[#6B7280]">
                       <DollarSign className="h-4 w-4 mr-1" />${job.price}
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center text-[#6B7280]">
                       <MapPin className="h-4 w-4 mr-1" />
                       {job.location}
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center text-[#6B7280]">
                       <Calendar className="h-4 w-4 mr-1" />
                       {new Date(job.date).toLocaleDateString()}
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center text-[#6B7280]">
                       <Clock className="h-4 w-4 mr-1" />
                       {job.status === "active"
                         ? t("jobDetailsPage.openForQuotes")
@@ -531,19 +526,19 @@ export default function JobDetails({ params }) {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold">{t("jobDetailsPage.jobDescription")}</h3>
-                  <p className="text-gray-600 dark:text-gray-300 mt-2">{job.description}</p>
+                  <h3 className="text-lg font-semibold text-[#22304A]">{t("jobDetailsPage.jobDescription")}</h3>
+                  <p className="text-[#6B7280] mt-2">{job.description}</p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">{t("jobDetailsPage.postedBy")}</h3>
+                  <h3 className="text-lg font-semibold text-[#22304A]">{t("jobDetailsPage.postedBy")}</h3>
                   <Link href={`/users/${job?.postedBy?._id}`} className="block mt-2">
-                    <div className="flex items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors">
+                    <div className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
                       <Avatar className="h-10 w-10 mr-3">
                         <AvatarImage
                           src={job?.postedBy?.avatar || "/placeholder.svg?height=40&width=40"}
                           alt={job?.postedBy?.name || "User"}
                         />
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-[#10B981] text-white">
                           {job?.postedBy?.name
                             ? job?.postedBy?.name
                                 .split(" ")
@@ -553,10 +548,10 @@ export default function JobDetails({ params }) {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium text-blue-600 hover:text-blue-800">
+                        <p className="font-medium text-[#10B981] hover:text-[#0D9468]">
                           {job?.postedBy?.name || job?.postedBy?.email || "User"}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-[#6B7280]">
                           {t("jobDetailsPage.jobPoster")} • {t("jobDetailsPage.clickToViewProfile")}
                         </p>
                       </div>
@@ -568,34 +563,42 @@ export default function JobDetails({ params }) {
           </Card>
           <div className="mt-6">
             <Tabs value={activeTab} onValueChange={handleTabChange}>
-              <TabsList className="mb-4">
-                <TabsTrigger value="quotes">
+              <TabsList className="mb-4 bg-[#F3F4F6] rounded-lg p-1">
+                <TabsTrigger
+                  value="quotes"
+                  className="data-[state=active]:bg-white data-[state=active]:text-[#10B981] data-[state=active]:shadow-sm"
+                >
                   {t("jobDetailsPage.quotes")} ({quotes?.length || 0})
                 </TabsTrigger>
-                <TabsTrigger value="messages">{t("jobDetailsPage.messages")}</TabsTrigger>
+                <TabsTrigger
+                  value="messages"
+                  className="data-[state=active]:bg-white data-[state=active]:text-[#10B981] data-[state=active]:shadow-sm"
+                >
+                  {t("jobDetailsPage.messages")}
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="quotes">
-                <Card>
+                <Card className="border border-[#E5E7EB]">
                   <CardHeader>
-                    <CardTitle className="text-xl">{t("jobDetailsPage.serviceProviderQuotes")}</CardTitle>
-                    <CardDescription>{t("jobDetailsPage.reviewQuotes")}</CardDescription>
+                    <CardTitle className="text-xl text-[#22304A]">{t("jobDetailsPage.serviceProviderQuotes")}</CardTitle>
+                    <CardDescription className="text-[#6B7280]">{t("jobDetailsPage.reviewQuotes")}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {quotes && quotes.length > 0 ? (
                       <div className="space-y-6">
                         {quotes.map((quote) => (
-                          <div key={quote._id} className="border rounded-lg p-4">
+                          <div key={quote._id} className="border border-[#E5E7EB] rounded-lg p-4 hover:shadow-sm transition-shadow">
                             <div className="flex justify-between items-start mb-4">
                               <Link
                                 href={`/users/${quote.provider?._id}`}
-                                className="flex items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors"
+                                className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
                               >
                                 <Avatar className="h-10 w-10 mr-3">
                                   <AvatarImage
                                     src={quote.provider?.avatar || "/placeholder.svg?height=40&width=40"}
                                     alt={quote.provider?.name || "Provider"}
                                   />
-                                  <AvatarFallback>
+                                  <AvatarFallback className="bg-[#10B981] text-white">
                                     {quote.provider?.name
                                       ? quote.provider.name
                                           .split(" ")
@@ -605,18 +608,17 @@ export default function JobDetails({ params }) {
                                   </AvatarFallback>
                                 </Avatar>
                                 <div>
-                                  <p className="font-medium text-blue-600 hover:text-blue-800">
+                                  <p className="font-medium text-[#10B981] hover:text-[#0D9468]">
                                     {quote.provider?.name || quote.provider?.email || "Provider"}
                                   </p>
-                                  <p className="text-sm text-gray-500">
-                                    {new Date(quote.createdAt).toLocaleDateString()} •{" "}
-                                    {t("jobDetailsPage.clickToViewProfile")}
+                                  <p className="text-sm text-[#6B7280]">
+                                    {new Date(quote.createdAt).toLocaleDateString()} • {t("jobDetailsPage.clickToViewProfile")}
                                   </p>
                                 </div>
                               </Link>
-                              <div className="text-xl font-bold text-green-600">${quote.price}</div>
+                              <div className="text-xl font-bold text-[#10B981]">${quote.price}</div>
                             </div>
-                            <p className="text-gray-600 dark:text-gray-300 mb-4">{quote.message}</p>
+                            <p className="text-[#6B7280] mb-4">{quote.message}</p>
                             {quote.image && (
                               <div className="mb-4">
                                 <img
@@ -628,8 +630,17 @@ export default function JobDetails({ params }) {
                             )}
                             {user?.userType === "Buyer" && job.status === "active" && (
                               <div className="flex gap-3 mt-4">
-                                <Button onClick={() => handleHire(quote)}>{t("jobDetailsPage.hire")}</Button>
-                                <Button variant="outline" onClick={() => switchToMessagesTab(quote.provider)}>
+                                <Button
+                                  onClick={() => handleHire(quote)}
+                                  className="bg-[#10B981] hover:bg-[#0D9468] text-white"
+                                >
+                                  {t("jobDetailsPage.hire")}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => switchToMessagesTab(quote.provider)}
+                                  className="border-[#10B981] text-[#10B981] hover:bg-[#10B981]/10"
+                                >
                                   {t("jobDetailsPage.message")}
                                 </Button>
                               </div>
@@ -639,18 +650,20 @@ export default function JobDetails({ params }) {
                       </div>
                     ) : (
                       <div className="text-center py-8">
-                        <p className="text-gray-500 dark:text-gray-400 mb-2">{t("jobDetailsPage.noQuotesYet")}</p>
-                        <p className="text-sm text-gray-400 dark:text-gray-500">
+                        <p className="text-[#6B7280] mb-2">{t("jobDetailsPage.noQuotesYet")}</p>
+                        <p className="text-sm text-[#6B7280]">
                           {t("jobDetailsPage.beFirstToSendQuote")}
                         </p>
                       </div>
                     )}
                     {user?.userType === "Seller" && job.status === "active" && (
-                      <div className="mt-6 border-t pt-6">
-                        <h3 className="text-lg font-semibold mb-4">{t("jobDetailsPage.sendAQuote")}</h3>
+                      <div className="mt-6 border-t border-[#E5E7EB] pt-6">
+                        <h3 className="text-lg font-semibold text-[#22304A] mb-4">{t("jobDetailsPage.sendAQuote")}</h3>
                         <form onSubmit={handleQuoteSubmit} className="space-y-4">
                           <div>
-                            <Label htmlFor="quoteMessage">{t("jobDetailsPage.message")}</Label>
+                            <Label htmlFor="quoteMessage" className="text-[#22304A]">
+                              {t("jobDetailsPage.message")}
+                            </Label>
                             <Textarea
                               id="quoteMessage"
                               placeholder={t("jobDetailsPage.describeExperience")}
@@ -658,10 +671,13 @@ export default function JobDetails({ params }) {
                               onChange={(e) => setNewQuote(e.target.value)}
                               rows={4}
                               required
+                              className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                             />
                           </div>
                           <div>
-                            <Label htmlFor="quotePrice">{t("jobDetailsPage.yourPrice")}</Label>
+                            <Label htmlFor="quotePrice" className="text-[#22304A]">
+                              {t("jobDetailsPage.yourPrice")}
+                            </Label>
                             <Input
                               id="quotePrice"
                               type="number"
@@ -671,10 +687,13 @@ export default function JobDetails({ params }) {
                               min="1"
                               step="0.01"
                               required
+                              className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                             />
                           </div>
                           <div>
-                            <Label htmlFor="quoteImage">{t("jobDetailsPage.attachImage")}</Label>
+                            <Label htmlFor="quoteImage" className="text-[#22304A]">
+                              {t("jobDetailsPage.attachImage")}
+                            </Label>
                             <div className="flex items-center gap-2 mt-1">
                               <Input
                                 id="quoteImage"
@@ -687,16 +706,21 @@ export default function JobDetails({ params }) {
                                 type="button"
                                 variant="outline"
                                 onClick={() => document.getElementById("quoteImage").click()}
+                                className="border-[#10B981] text-[#10B981] hover:bg-[#10B981]/10"
                               >
                                 <Upload className="h-4 w-4 mr-2" />
                                 {t("jobDetailsPage.uploadImage")}
                               </Button>
                               {quoteImage && (
-                                <span className="text-sm text-green-600">{t("jobDetailsPage.imageAttached")}</span>
+                                <span className="text-sm text-[#10B981]">{t("jobDetailsPage.imageAttached")}</span>
                               )}
                             </div>
                           </div>
-                          <Button type="submit" disabled={isSubmitting}>
+                          <Button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="bg-[#10B981] hover:bg-[#0D9468] text-white"
+                          >
                             {isSubmitting ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -713,10 +737,10 @@ export default function JobDetails({ params }) {
                 </Card>
               </TabsContent>
               <TabsContent value="messages">
-                <Card>
+                <Card className="border border-[#E5E7EB]">
                   <CardHeader>
-                    <CardTitle className="text-xl">{t("jobDetailsPage.messages")}</CardTitle>
-                    <CardDescription>{t("jobDetailsPage.communicateWithJobPoster")}</CardDescription>
+                    <CardTitle className="text-xl text-[#22304A]">{t("jobDetailsPage.messages")}</CardTitle>
+                    <CardDescription className="text-[#6B7280]">{t("jobDetailsPage.communicateWithJobPoster")}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="h-96 flex flex-col">
@@ -730,8 +754,8 @@ export default function JobDetails({ params }) {
                               <div
                                 className={`max-w-[80%] rounded-lg p-3 ${
                                   message.sender._id === user?._id
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-gray-100 dark:bg-gray-800"
+                                    ? "bg-[#10B981] text-white"
+                                    : "bg-gray-100 text-[#22304A]"
                                 }`}
                               >
                                 <div className="text-xs mb-1">
@@ -740,7 +764,7 @@ export default function JobDetails({ params }) {
                                       {message.sender?.name || message.sender?.email || "User"}
                                     </span>
                                   )}
-                                  <span className="text-gray-400 dark:text-gray-500 ml-2">
+                                  <span className="text-gray-300 ml-2">
                                     {new Date(message.createdAt).toLocaleTimeString([], {
                                       hour: "2-digit",
                                       minute: "2-digit",
@@ -753,19 +777,19 @@ export default function JobDetails({ params }) {
                           ))
                         ) : (
                           <div className="flex items-center justify-center h-full">
-                            <p className="text-gray-500 dark:text-gray-400">{t("jobDetailsPage.noMessagesYet")}</p>
+                            <p className="text-[#6B7280]">{t("jobDetailsPage.noMessagesYet")}</p>
                           </div>
                         )}
                         <div ref={messagesEndRef} />
                       </div>
                       {messageRecipient ? (
-                        <div className="border-t pt-4">
+                        <div className="border-t border-[#E5E7EB] pt-4">
                           <div className="flex gap-2">
                             <Textarea
                               placeholder={t("jobDetailsPage.typeYourMessage")}
                               value={newMessage}
                               onChange={(e) => setNewMessage(e.target.value)}
-                              className="min-h-[60px]"
+                              className="min-h-[60px] border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" && !e.shiftKey) {
                                   e.preventDefault()
@@ -773,13 +797,16 @@ export default function JobDetails({ params }) {
                                 }
                               }}
                             />
-                            <Button onClick={handleSendMessage} className="h-auto">
+                            <Button
+                              onClick={handleSendMessage}
+                              className="h-auto bg-[#10B981] hover:bg-[#0D9468] text-white"
+                            >
                               <Send className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
                       ) : (
-                        <div className="border-t pt-4 text-center text-gray-500">
+                        <div className="border-t border-[#E5E7EB] pt-4 text-center text-[#6B7280]">
                           {job.status === "active" && user?.userType === "Seller" ? (
                             <p>{t("jobDetailsPage.submitAQuoteToStartMessaging")}</p>
                           ) : job.status === "active" && user?.userType === "Buyer" ? (
@@ -797,14 +824,14 @@ export default function JobDetails({ params }) {
           </div>
         </div>
         <div className="md:col-span-1">
-          <Card className="sticky top-20">
+          <Card className="sticky top-20 border border-[#E5E7EB]">
             <CardHeader>
-              <CardTitle className="text-xl">{t("jobDetailsPage.jobSummary")}</CardTitle>
+              <CardTitle className="text-xl text-[#22304A]">{t("jobDetailsPage.jobSummary")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("jobDetailsPage.status")}</h3>
-                <p className="font-semibold mt-1">
+                <h3 className="text-sm font-medium text-[#6B7280]">{t("jobDetailsPage.status")}</h3>
+                <p className="font-semibold text-[#22304A] mt-1">
                   {job.status === "active"
                     ? t("jobDetailsPage.openForQuotes")
                     : job.status === "in_progress"
@@ -815,57 +842,57 @@ export default function JobDetails({ params }) {
                 </p>
               </div>
               {job.status === "in_progress" && job.escrowEndDate && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                  <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
+                <div className="bg-[#10B981]/10 p-3 rounded-lg">
+                  <h3 className="text-sm font-medium text-[#10B981] mb-2">
                     {t("jobDetailsPage.escrowTimer")}
                   </h3>
-
-                  <div className="mb-3 p-2 bg-white dark:bg-gray-800 rounded border">
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Job will auto-complete on:</p>
-                    <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  <div className="mb-3 p-2 bg-white rounded border border-[#E5E7EB]">
+                    <p className="text-sm font-medium text-[#6B7280]">{t("jobDetailsPage.jobWillAutoCompleteOn")}:</p>
+                    <p className="text-lg font-bold text-[#10B981]">
                       {formatEndDate(job.escrowEndDate)}
                     </p>
                   </div>
-
                   {!timerStarted ? (
-                    <Button onClick={handleStartTimer} className="w-full mb-2 bg-transparent" variant="outline">
+                    <Button
+                      onClick={handleStartTimer}
+                      className="w-full mb-2 bg-transparent border border-[#10B981] text-[#10B981] hover:bg-[#10B981]/10"
+                    >
                       <Play className="h-4 w-4 mr-2" />
-                      Start Timer
+                      {t("jobDetailsPage.startTimer")}
                     </Button>
                   ) : (
                     <div className="mb-2">
                       <CountdownTimer endDate={job.escrowEndDate} onComplete={handleTimerComplete} />
                     </div>
                   )}
-
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                  <p className="text-xs text-[#10B981] mt-2">
                     {t("jobDetailsPage.jobWillAutoComplete")}
                   </p>
                 </div>
               )}
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("jobDetailsPage.budget")}</h3>
-                <p className="font-semibold mt-1">${job.price}</p>
+                <h3 className="text-sm font-medium text-[#6B7280]">{t("jobDetailsPage.budget")}</h3>
+                <p className="font-semibold text-[#22304A] mt-1">${job.price}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("jobDetailsPage.location")}</h3>
-                <p className="font-semibold mt-1">{job.location}</p>
+                <h3 className="text-sm font-medium text-[#6B7280]">{t("jobDetailsPage.location")}</h3>
+                <p className="font-semibold text-[#22304A] mt-1">{job.location}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                <h3 className="text-sm font-medium text-[#6B7280]">
                   {t("jobDetailsPage.datePosted")}
                 </h3>
-                <p className="font-semibold mt-1">{new Date(job.createdAt).toLocaleDateString()}</p>
+                <p className="font-semibold text-[#22304A] mt-1">{new Date(job.createdAt).toLocaleDateString()}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                <h3 className="text-sm font-medium text-[#6B7280]">
                   {t("jobDetailsPage.quotesReceived")}
                 </h3>
-                <p className="font-semibold mt-1">{quotes?.length || 0}</p>
+                <p className="font-semibold text-[#22304A] mt-1">{quotes?.length || 0}</p>
               </div>
               {job.status === "in_progress" && job.hiredProvider && (
-                <div className="border-t pt-4 mt-4">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                <div className="border-t border-[#E5E7EB] pt-4 mt-4">
+                  <h3 className="text-sm font-medium text-[#6B7280] mb-2">
                     {t("jobDetailsPage.hiredProvider")}
                   </h3>
                   <div className="flex items-center">
@@ -874,7 +901,7 @@ export default function JobDetails({ params }) {
                         src={job?.hiredProvider?.avatar || "/placeholder.svg?height=40&width=40"}
                         alt={job?.hiredProvider?.name || "Provider"}
                       />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-[#10B981] text-white">
                         {job?.hiredProvider?.name
                           ? job?.hiredProvider.name
                               .split(" ")
@@ -884,16 +911,19 @@ export default function JobDetails({ params }) {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">
+                      <p className="font-medium text-[#22304A]">
                         {job?.hiredProvider?.name || job?.hiredProvider?.email || "Provider"}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-[#6B7280]">
                         ${quotes?.find((q) => q.provider?._id === job.hiredProvider?._id)?.price || job.price}
                       </p>
                     </div>
                   </div>
                   {user?.userType === "Buyer" && user._id === job.postedBy?._id && (
-                    <Button className="w-full mt-4" onClick={handleMarkComplete}>
+                    <Button
+                      className="w-full mt-4 bg-[#10B981] hover:bg-[#0D9468] text-white"
+                      onClick={handleMarkComplete}
+                    >
                       {t("jobDetailsPage.markAsCompleted")}
                     </Button>
                   )}
@@ -902,14 +932,17 @@ export default function JobDetails({ params }) {
               {job.status === "completed" &&
                 ((user?.userType === "Buyer" && user._id === job.postedBy?._id) ||
                   (user?.userType === "Seller" && user._id === job.hiredProvider?._id)) && (
-                  <div className="border-t pt-4 mt-4">
-                    <Button className="w-full" onClick={() => setShowReviewModal(true)}>
+                  <div className="border-t border-[#E5E7EB] pt-4 mt-4">
+                    <Button
+                      className="w-full bg-[#10B981] hover:bg-[#0D9468] text-white"
+                      onClick={() => setShowReviewModal(true)}
+                    >
                       {t("jobDetailsPage.leaveAReview")}
                     </Button>
                   </div>
                 )}
               {user?.userType === "Buyer" && user._id === job.postedBy?._id && job.status === "active" && (
-                <div className="border-t pt-4 mt-4">
+                <div className="border-t border-[#E5E7EB] pt-4 mt-4">
                   <Button
                     variant="outline"
                     className="w-full text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 bg-transparent"
@@ -940,9 +973,9 @@ export default function JobDetails({ params }) {
                 </div>
               )}
               {user?.userType === "Seller" && job.status === "active" && (
-                <div className="border-t pt-4 mt-4">
+                <div className="border-t border-[#E5E7EB] pt-4 mt-4">
                   <Button
-                    className="w-full"
+                    className="w-full bg-[#10B981] hover:bg-[#0D9468] text-white"
                     onClick={() => {
                       setActiveTab("quotes")
                       setTimeout(() => {
@@ -986,17 +1019,22 @@ export default function JobDetails({ params }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("jobDetailsPage.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmHire}>{t("jobDetailsPage.confirm")}</AlertDialogAction>
+            <AlertDialogAction
+              onClick={confirmHire}
+              className="bg-[#10B981] hover:bg-[#0D9468] text-white"
+            >
+              {t("jobDetailsPage.confirm")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
       {showReviewModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">{t("jobDetailsPage.leaveAReviewTitle")}</h3>
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-[#22304A] mb-4">{t("jobDetailsPage.leaveAReviewTitle")}</h3>
             <div className="space-y-4">
               <div>
-                <Label>{t("jobDetailsPage.rating")}</Label>
+                <Label className="text-[#22304A]">{t("jobDetailsPage.rating")}</Label>
                 <div className="flex space-x-1 mt-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -1011,20 +1049,29 @@ export default function JobDetails({ params }) {
                 </div>
               </div>
               <div>
-                <Label>{t("jobDetailsPage.comment")}</Label>
+                <Label className="text-[#22304A]">{t("jobDetailsPage.comment")}</Label>
                 <Textarea
                   value={reviewData.comment}
                   onChange={(e) => setReviewData((prev) => ({ ...prev, comment: e.target.value }))}
                   placeholder={t("jobDetailsPage.shareYourExperience")}
                   rows={4}
+                  className="border-[#E5E7EB] focus:border-[#10B981] focus:ring-[#10B981]"
                 />
               </div>
             </div>
             <div className="flex justify-end space-x-2 mt-6">
-              <Button variant="outline" onClick={() => setShowReviewModal(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowReviewModal(false)}
+                className="border-[#E5E7EB] text-[#6B7280] hover:bg-[#F3F4F6]"
+              >
                 {t("jobDetailsPage.cancel")}
               </Button>
-              <Button onClick={handleSubmitReview} disabled={isSubmittingReview}>
+              <Button
+                onClick={handleSubmitReview}
+                disabled={isSubmittingReview}
+                className="bg-[#10B981] hover:bg-[#0D9468] text-white"
+              >
                 {isSubmittingReview ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
