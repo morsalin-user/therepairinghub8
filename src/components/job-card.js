@@ -27,18 +27,6 @@ export default function JobCard({ job, userType }) {
     }
   }
 
-  // Helper function to format deadline/preferred date safely
-  const formatDeadline = (deadlineValue) => {
-    if (!deadlineValue) return t("jobCard.flexible") || "Flexible"
-    
-    const date = new Date(deadlineValue)
-    if (isNaN(date.getTime())) {
-      return t("jobCard.dateNotSet") || "Date not set"
-    }
-    
-    return date.toLocaleDateString()
-  }
-
   const handleCancelJob = async () => {
     if (!confirm(t("jobCard.areYouSureCancelJob"))) return
     setIsLoading(true)
@@ -104,14 +92,9 @@ export default function JobCard({ job, userType }) {
             <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
             <span>{job.location}</span>
           </div>
-          {/* 🔥 FIX: Use job.deadline instead of job.date */}
           <div className="flex items-center">
             <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-            <span>Preferred by: {formatDeadline(job.deadline)}</span>
-          </div>
-          {/* Show when job was posted */}
-          <div className="flex items-center text-xs text-gray-400">
-            <span>Posted: {job.createdAt ? new Date(job.createdAt).toLocaleDateString() : "Recently"}</span>
+            <span>{new Date(job.date).toLocaleDateString()}</span>
           </div>
         </div>
       </CardContent>
