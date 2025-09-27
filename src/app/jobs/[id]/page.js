@@ -153,24 +153,21 @@ export default function JobDetails({ params }) {
   }
 
   const formatEndDate = (endDate) => {
+    let date
+
     if (!endDate) {
-      const fallbackDate = new Date()
-      fallbackDate.setHours(fallbackDate.getHours() + 24)
-      endDate = fallbackDate.toISOString()
+      // Create fallback date: 24 hours from now
+      date = new Date()
+      date.setHours(date.getHours() + 24)
+    } else {
+      date = new Date(endDate)
     }
 
-    const date = new Date(endDate)
-
+    // Check if date is valid
     if (isNaN(date.getTime())) {
-      const fallbackDate = new Date()
-      fallbackDate.setHours(fallbackDate.getHours() + 24)
-      return fallbackDate.toLocaleDateString("en-US", {
-        day: "numeric",
-        month: "short",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      })
+      // If still invalid, create a new fallback date
+      date = new Date()
+      date.setHours(date.getHours() + 24)
     }
 
     const options = {
@@ -845,7 +842,7 @@ export default function JobDetails({ params }) {
                   <div className="mb-3 p-2 bg-white dark:bg-gray-800 rounded border">
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Job will auto-complete on:</p>
                     <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                      {formatEndDate(job.escrowEndDate || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString())}
+                      {formatEndDate(job.escrowEndDate)}
                     </p>
                   </div>
 
