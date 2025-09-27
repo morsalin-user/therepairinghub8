@@ -10,13 +10,11 @@ export async function GET(req, { params }) {
   try {
     await connectToDatabase()
 
-    // Check authentication
     const authResult = await handleProtectedRoute(req)
     if (!authResult.success) {
       return NextResponse.json({ success: false, message: authResult.message }, { status: authResult.status || 401 })
     }
 
-    // Get job
     const job = await Job.findById(params.id)
       .populate("postedBy", "name email avatar")
       .populate("hiredProvider", "name email avatar")
@@ -25,12 +23,22 @@ export async function GET(req, { params }) {
       return NextResponse.json({ success: false, message: "Job not found" }, { status: 404 })
     }
 
-    // Get quotes for this job
+    // 🔥 FIX: Format the job date
+    const jobObj = job.toObject()
+    const formattedJob = {
+      ...jobObj,
+      date: jobObj.date && !isNaN(new Date(jobObj.date)) 
+        ? new Date(jobObj.date).toISOString() 
+        : new Date().toISOString(),
+      createdAt: jobObj.createdAt ? new Date(jobObj.createdAt).toISOString() : new Date().toISOString(),
+      updatedAt: jobObj.updatedAt ? new Date(jobObj.updatedAt).toISOString() : new Date().toISOString()
+    }
+
     const quotes = await Quote.find({ job: params.id }).populate("provider", "name email avatar")
 
     return NextResponse.json({
       success: true,
-      job,
+      job: formattedJob, // Return formatted job
       quotes: quotes || [],
     })
   } catch (error) {
