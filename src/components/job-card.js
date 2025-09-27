@@ -27,6 +27,18 @@ export default function JobCard({ job, userType }) {
     }
   }
 
+  // Helper function to format date safely
+  const formatDate = (dateValue) => {
+    if (!dateValue) return t("jobCard.dateNotSet") || "Date not set"
+    
+    const date = new Date(dateValue)
+    if (isNaN(date.getTime())) {
+      return t("jobCard.invalidDate") || "Invalid date"
+    }
+    
+    return date.toLocaleDateString()
+  }
+
   const handleCancelJob = async () => {
     if (!confirm(t("jobCard.areYouSureCancelJob"))) return
     setIsLoading(true)
@@ -94,7 +106,7 @@ export default function JobCard({ job, userType }) {
           </div>
           <div className="flex items-center">
             <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-            <span>{new Date(job.date).toLocaleDateString()}</span>
+            <span>{formatDate(job.date)}</span>
           </div>
         </div>
       </CardContent>
