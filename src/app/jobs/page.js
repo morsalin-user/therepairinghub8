@@ -22,6 +22,7 @@ export default function Jobs() {
   const [category, setCategory] = useState("")
   const [location, setLocation] = useState("")
   const [categories, setCategories] = useState([])
+  const [showFilters, setShowFilters] = useState(false) // State to toggle filter visibility on mobile
   const { toast } = useToast()
 
   useEffect(() => {
@@ -103,64 +104,79 @@ export default function Jobs() {
   return (
     <div className="container py-10">
       <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-        {/* Filters */}
-        <Card className="w-full md:w-64 sticky top-20">
-          <CardHeader>
-            <CardTitle className="text-xl">{t("jobsPage.filters")}</CardTitle>
-            <CardDescription>{t("jobsPage.refineSearch")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">{t("jobsPage.priceRange")}</Label>
-              <div className="pt-4">
-                <Slider
-                  defaultValue={[0, 500]}
-                  max={500}
-                  step={10}
-                  value={priceRange}
-                  onValueChange={handlePriceChange}
-                />
-                <div className="flex justify-between mt-2 text-sm text-gray-500">
-                  <span>${priceRange[0]}</span>
-                  <span>${priceRange[1]}</span>
+        {/* Mobile Filter Button (Left Side) */}
+        <div className="md:hidden w-full mb-4">
+          <Button
+            variant="outline"
+            className="w-fit flex items-center gap-2"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4" />
+            {t("jobsPage.filters")}
+          </Button>
+        </div>
+
+        {/* Filters Card (Hidden on Mobile by Default) */}
+        <div className={`w-full md:w-64 ${showFilters ? "block" : "hidden"} md:block sticky top-20`}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">{t("jobsPage.filters")}</CardTitle>
+              <CardDescription>{t("jobsPage.refineSearch")}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">{t("jobsPage.priceRange")}</Label>
+                <div className="pt-4">
+                  <Slider
+                    defaultValue={[0, 500]}
+                    max={500}
+                    step={10}
+                    value={priceRange}
+                    onValueChange={handlePriceChange}
+                  />
+                  <div className="flex justify-between mt-2 text-sm text-gray-500">
+                    <span>${priceRange[0]}</span>
+                    <span>${priceRange[1]}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">{t("jobsPage.category")}</Label>
-              <Select value={category} onValueChange={handleCategoryChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t("jobsPage.allCategories")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("jobsPage.allCategories")}</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">{t("jobsPage.location")}</Label>
-              <div className="relative">
-                <MapPin className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder={t("jobsPage.enterLocation")}
-                  value={location}
-                  onChange={handleLocationChange}
-                  className="pl-8"
-                />
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">{t("jobsPage.category")}</Label>
+                <Select value={category} onValueChange={handleCategoryChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("jobsPage.allCategories")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("jobsPage.allCategories")}</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-            <Button variant="outline" className="w-full" onClick={resetFilters}>
-              {t("jobsPage.resetFilters")}
-            </Button>
-          </CardContent>
-        </Card>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">{t("jobsPage.location")}</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder={t("jobsPage.enterLocation")}
+                    value={location}
+                    onChange={handleLocationChange}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+              <Button variant="outline" className="w-full" onClick={resetFilters}>
+                {t("jobsPage.resetFilters")}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Job Listings */}
-        <div className="flex-1">
+        <div className="flex-1 w-full">
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
               <div className="relative flex-1">
@@ -172,11 +188,6 @@ export default function Jobs() {
                   className="pl-8"
                 />
               </div>
-              {/* Mobile filters button */}
-              <Button variant="outline" className="sm:hidden flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                {t("jobsPage.filters")}
-              </Button>
             </div>
             <div className="flex justify-between items-center">
               <h1 className="text-2xl font-bold">{t("jobsPage.availableJobs")}</h1>
