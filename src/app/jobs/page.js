@@ -102,7 +102,7 @@ export default function Jobs() {
   }
 
   return (
-    <div className="container py-10">
+    <div className="container py-10 px-10">
       <div className="flex flex-col md:flex-row justify-between items-start gap-6">
         {/* Mobile Filter Button (Left Side) */}
         <div className="md:hidden w-full mb-4">
