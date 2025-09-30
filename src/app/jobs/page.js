@@ -179,7 +179,7 @@ export default function Jobs() {
         <div className="flex-1 w-full">
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="relative flex-1">
+              <div className="relative flex-1 z-[-100]">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder={t("jobsPage.searchJobs")}
