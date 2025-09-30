@@ -66,7 +66,7 @@ export default function Header() {
     <header className="bg-[#1E3A8A] border-b border-white/10 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo - 2x bigger */}
+          {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <div className="w-12 h-12 bg-[#10B981] rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">RH</span>
@@ -74,7 +74,7 @@ export default function Header() {
             <span className="text-2xl font-bold text-white">RepairingHub</span>
           </Link>
 
-          {/* Desktop Navigation - Centered, button-style */}
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => (
               <Link
@@ -87,19 +87,16 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Right Side Actions */}
-          <div className="flex items-center space-x-4">
+          {/* Right Side Actions (Desktop) */}
+          <div className="hidden md:flex items-center space-x-4">
             <LanguageSelector />
             {user ? (
               <>
-                {/* Post Job Button - Primary Green */}
                 <Link href="/post-job">
                   <Button className="bg-[#10B981] hover:bg-[#0d9468] hover:shadow-md transition-all duration-200 text-white font-medium">
                     {t("navigation.postJob")}
                   </Button>
                 </Link>
-
-                {/* Notifications */}
                 <Link href="/notifications" className="relative">
                   <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-white hover:bg-white/10">
                     <Bell className="h-4 w-4" />
@@ -110,11 +107,9 @@ export default function Header() {
                     )}
                   </Button>
                 </Link>
-
-                {/* User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 text-white hover:bg-white/10">
                       <Avatar className="h-9 w-9">
                         <AvatarFallback className="bg-[#10B981] text-white">
                           {user.firstName?.[0]?.toUpperCase() || "U"}
@@ -179,12 +174,15 @@ export default function Header() {
                 </Link>
               </div>
             )}
+          </div>
 
-            {/* Mobile Menu Button */}
+          {/* Mobile: Hamburger Menu + Language Selector */}
+          <div className="flex md:hidden items-center space-x-2">
+            <LanguageSelector />
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden h-9 w-9 p-0 text-white hover:bg-white/10"
+              className="h-9 w-9 p-0 text-white hover:bg-white/10"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -192,7 +190,7 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation Menu */}
         {isMenuOpen && (
           <div className="md:hidden border-t border-white/10 py-4">
             <nav className="flex flex-col space-y-3">
@@ -206,7 +204,7 @@ export default function Header() {
                   {item.label}
                 </Link>
               ))}
-              {!user && (
+              {!user ? (
                 <>
                   <Link
                     href="/login"
@@ -222,6 +220,41 @@ export default function Header() {
                   >
                     {t("navigation.register")}
                   </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/post-job"
+                    className="px-4 py-2 text-white/80 hover:bg-[#10B981] hover:text-white rounded-md transition-all duration-200 font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {t("navigation.postJob")}
+                  </Link>
+                  <Link
+                    href="/notifications"
+                    className="px-4 py-2 text-white/80 hover:bg-[#10B981] hover:text-white rounded-md transition-all duration-200 font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {t("navigation.notifications")}
+                    {unreadCount > 0 && (
+                      <Badge className="ml-2 bg-[#F59E42] text-white">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </Badge>
+                    )}
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="px-4 py-2 text-white/80 hover:bg-[#10B981] hover:text-white rounded-md transition-all duration-200 font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {t("navigation.profile")}
+                  </Link>
+                  <button
+                    onClick={() => { handleLogout(); setIsMenuOpen(false); }}
+                    className="px-4 py-2 text-white/80 hover:bg-[#10B981] hover:text-white rounded-md transition-all duration-200 font-medium text-left"
+                  >
+                    {t("navigation.logout")}
+                  </button>
                 </>
               )}
             </nav>
